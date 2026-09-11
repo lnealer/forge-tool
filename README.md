@@ -8,3 +8,15 @@ Setup:
 5. Run:\
     cd python\
     python upgrade_code.py
+
+Current state:
+This tool can accept a git repository and upgrade details, clone and modify the given repo, run unit tests, and submit a PR. 
+
+
+TODO:
+- Chat functionality
+- Additional agent(s) for review
+- Test harness
+- Additional guard rails
+- Nicer UI (?) (cleaner logging, chat ui, etc.)
+- Better, more complex test repo(s) (including struts, etc.)
