@@ -3,14 +3,17 @@ import boto3
 
 
 def get_logger():
-    """Configure a logger compatible with local python interpreter and Lambda."""
-    if len(logging.getLogger().handlers) > 0:
-        # The Lambda environment pre-configures a handler logging to stderr. If a handler is already configured,
-        # `.basicConfig` does not execute. Thus we set the level directly.
-        logging.getLogger().setLevel(logging.INFO)
-    else:
-        logging.basicConfig(level=logging.INFO)
-    return logging.getLogger()
+    # """Configure a logger compatible with local python interpreter and Lambda."""
+    # if len(logging.getLogger().handlers) > 0:
+    #     # The Lambda environment pre-configures a handler logging to stderr. If a handler is already configured,
+    #     # `.basicConfig` does not execute. Thus we set the level directly.
+    #     logging.getLogger().setLevel(logging.INFO)
+    # else:
+    #     logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("FORGE_TOOL")
+    file_handler = logging.FileHandler('app.log')
+    logger.addHandler(file_handler)
+    return logger
 
 
 def get_config(parameter_store_prefix, parameter_names):

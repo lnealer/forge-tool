@@ -19,17 +19,16 @@ config = Config(connect_timeout=240, read_timeout=240)
 logger = get_logger()
 
 DEFAULT_MODEL = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
-DEFAULT_MODEL_REGION = "us-east-1"
-PROMPT_TEMPLATE = PromptTemplate(
-    input_variables=["version", "source_code", "repo_api_url", "repo_url", "api_key", "ssh_private_key_path", "tmpdir"],
-    template="""
+DEFAULT_MODEL_REGION = "us-east-1";
+PROMPT_TEMPLATE = """
 Human: 
-You are a code upgrading assistant for Spring, Java, Spring Boot, and Struts.
+You are a code upgrading assistant chat bot for Spring, Java, Spring Boot, and Struts.
 Clone the repo inside the tmpdir using repo_url. Upgrade the code and push to a branch. 
 Format the branch name like 'spring-upgrade-[current timestamp]'.
 After writing the upgrades run unit tests using maven and address any issues.
 Then create a PR using repo_api_url and report any remaining issues in the PR description.
 Modify only the code relevant to the upgrade.
+Respond with a message when you're ready for a review.
 
 <verion>
 {version}
@@ -49,8 +48,9 @@ Modify only the code relevant to the upgrade.
 <tmpdir>
 {tmpdir}
 </tmpdir>
-""",
-)
+"""
+
+
 
 class Model:
     """Model class for GenAI."""
@@ -58,23 +58,14 @@ class Model:
     def upgrade_code(self, version, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir):
         """Trigger the code fix generation process."""
         prompt = self._create_prompt(version, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir)
-        content = self.llm.invoke({"messages": [{"role": "user", "content": prompt}]})
+        content = self.llm.invoke({"messages": [{"role": "system", "content": prompt}]})
+        print(content["messages"][-1].content)
         return content
-
-class UpdatedCode(BaseModel):
-    filename: str = Field(description="The filename of the modified code")
-    code: str = Field(description="The modified code")
-
-class CodeUpgradeResponse(BaseModel):
-    code: List[UpdatedCode] = []
-    title: str = Field(description="A title for the upgrade")
-    description: str = Field(description= "A description of the changes")
-    errors: str = Field(description = "Any errors that occurred")
-
-class CodeUpgradeResponseV2(BaseModel):
-    branch_name: str = Field(description = "Branch name of the pr")
-    errors: str = Field(description = "Any errors that occurred")
-
+    def invoke(self, message, content):
+        content["messages"].append({"role": "user", "content": message})
+        content = self.llm.invoke(content)
+        print(content["messages"][-1].content)
+        return content
 
 class Claude(Model):
     """Claude model class."""
@@ -106,15 +97,13 @@ class Claude(Model):
         toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "write_file", "list_directory"])
         tools = toolkit.get_tools()
         llm =  unstructured_llm.bind_tools([run_maven_test, update_source_code, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit] + tools)
-        self.llm = create_agent(llm, [run_maven_test, update_source_code, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit] + tools)
+        self.llm = create_agent(model=llm, tools=[run_maven_test, update_source_code, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit] + tools)
         logger.info("Initialized Claude")
 
     def _create_prompt(self, version, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir):
         """Create a prompt for the model to generate a code upgrade."""
         logger.info("Creating prompt for model")
-        prompt = PROMPT_TEMPLATE.format(
-            version=version, repo_api_url=repo_api_url, repo_url=repo_url, api_key=api_key, ssh_private_key_path=ssh_private_key_path, tmpdir=tmpdir
-        )
+        prompt = PROMPT_TEMPLATE.format(version=version, repo_api_url=repo_api_url, repo_url=repo_url, api_key=api_key, ssh_private_key_path=ssh_private_key_path, tmpdir=tmpdir)
         return prompt
 
     def _invoke(self, prompt):
@@ -143,8 +132,7 @@ def run_maven_test(code_dir: str) -> str:
     Args:
         code_dir: The code directory to execute unit tests from.
     """
-    logger.info(f"Running maven tests in directory: {code_dir}")
-    print(f"Running: mvn clean test -f {code_dir}")
+    logger.info(f"Running: mvn clean test -f {code_dir}")
     command = f'mvn clean test -f {code_dir}'
     try:
         # Capture the output and check the return code

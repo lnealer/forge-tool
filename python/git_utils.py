@@ -54,10 +54,10 @@ def create_branch(branch_name, repo_file_path, commit_message):
     logger.info(f"Creating branch. file_path={repo_file_path}")
     repo_file_path =repo_file_path.replace("\\", "/")
     os.chdir(repo_file_path)
-    subprocess.run(["git", "checkout", "-b", branch_name])
+    subprocess.run(["git", "checkout", "-q", "-b", branch_name])
     subprocess.run(["git", "add", "."])
-    subprocess.run(["git", "commit", "-m", commit_message])
-    subprocess.run(["git", "push", "-u", "origin", branch_name])
+    subprocess.run(["git", "commit", "-q", "-m", commit_message])
+    subprocess.run(["git", "push", "-q", "-u", "origin", branch_name])
 
 @tool
 def git_commit(branch_name, repo_file_path, commit_message):

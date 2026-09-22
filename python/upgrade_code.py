@@ -9,8 +9,7 @@ from utils import get_logger, get_config
 from bedrock import Claude
 import logging
 
-# logger = get_logger()
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 PARAMETER_NAMES = [
     "ssh_private_key", "api_key"
@@ -20,10 +19,6 @@ SSH_PRIVATE_KEY_FILENAME = "ssh_private_key"
 PARAMETER_STORE_PREFIX = "forge_tool_"
 
 def upgrade_code(request):
-    """Lambda handler for the upgrade function.
-    """
-
-    print(f"Processing event: {request}")
     upgrade_details = request["upgrade_details"]
     repo_url = request["github_url"]
     repo_api_url = request["repo_api_url"]
@@ -36,7 +31,6 @@ def upgrade_code(request):
 
     # Select a model provider to perform the code generation
     tmpdir = tempfile.mkdtemp()
-    print(tmpdir)
     agent = Claude(model_aws_region=MODEL_AWS_REGION, working_dir=tmpdir)
 
     # branch_name = f"upgrade-code-{round(time.time())}"
@@ -49,6 +43,9 @@ def upgrade_code(request):
     # Trigger the code generation 
     result = agent.upgrade_code(upgrade_details, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir)
 
+    while (True):
+        human_message = input('\nUser enter feedback: ')
+        result = agent.invoke(human_message, result)
     logger.info("Upgrade complete")
 
     return result
@@ -66,7 +63,6 @@ def get_github_api_url(github_url):
     pattern = "git@github.com:(.*).git"
     match = re.search(pattern, github_url)
     repo_name = match.group(1)
-    print(repo_name)
     return f'https://api.github.com/repos/{repo_name}'
 
 if __name__ == "__main__":
@@ -87,9 +83,9 @@ if __name__ == "__main__":
 
     repo_api_url = get_github_api_url(github_url)
 
+    # git@github.com:lnealer/test_spring_upgrade_repo.git
     upgrade_code({
         "github_url": github_url,
         "upgrade_details": upgrade_details,
         "repo_api_url": repo_api_url,
-    }
-    )
+    })
