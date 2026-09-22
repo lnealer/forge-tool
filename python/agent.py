@@ -10,6 +10,10 @@ from langchain_core.prompts import PromptTemplate
 from langchain_community.agent_toolkits import FileManagementToolkit
 import subprocess
 from datetime import datetime
+from colorama import Fore, Back, Style
+from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.output_parsers import StrOutputParser
+
 
 from utils import get_logger
 
@@ -21,21 +25,20 @@ logger = get_logger()
 DEFAULT_MODEL = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 DEFAULT_MODEL_REGION = "us-east-1";
 PROMPT_TEMPLATE = """
-Human: 
 You are a code upgrading assistant chat bot for Spring, Java, Spring Boot, and Struts.
 Clone the repo inside the tmpdir using repo_url. Upgrade the code and push to a branch. 
 Format the branch name like 'spring-upgrade-[current timestamp]'.
 After writing the upgrades run unit tests using maven and address any issues.
 Then create a PR using repo_api_url and report any remaining issues in the PR description.
 Modify only the code relevant to the upgrade.
-Respond with a message when you're ready for a review.
+Respond with a message when you're ready for a review. 
+When the user asks for changes, mke the relevant changes to the code and push to your pull request.
+Censor API keys in messages.
+When you get feedback, push the changes to the remote for review.
 
 <verion>
 {version}
 </version>
-<repo_api_url>
-{repo_api_url}
-</repo_api_url>
 <repo_url>
 {repo_url}
 </repo_url>
@@ -51,21 +54,17 @@ Respond with a message when you're ready for a review.
 """
 
 
-
 class Model:
     """Model class for GenAI."""
 
-    def upgrade_code(self, version, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir):
-        """Trigger the code fix generation process."""
-        prompt = self._create_prompt(version, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir)
-        content = self.llm.invoke({"messages": [{"role": "system", "content": prompt}]})
-        print(content["messages"][-1].content)
-        return content
-    def invoke(self, message, content):
-        content["messages"].append({"role": "user", "content": message})
-        content = self.llm.invoke(content)
-        print(content["messages"][-1].content)
-        return content
+    def invoke(self, message, conversation):
+        conversation.append(HumanMessage(message))
+        conversation = self.llm.invoke({"messages": conversation})
+        return conversation
+    
+    def invoke(self, conversation):
+        conversation = self.llm.invoke({"messages": conversation})
+        return conversation
 
 class Claude(Model):
     """Claude model class."""
@@ -88,9 +87,9 @@ class Claude(Model):
                 "max_tokens": 10000,
                 # "top_p": 0.999,
                 # "top_k": 250,
-                "stop_sequences": [
-                    "\\n\\nHuman::",
-                ],
+                # "stop_sequences": [
+                #     "\\n\\nHuman::",
+                # ],
             },
         )
 
@@ -100,7 +99,7 @@ class Claude(Model):
         self.llm = create_agent(model=llm, tools=[run_maven_test, update_source_code, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit] + tools)
         logger.info("Initialized Claude")
 
-    def _create_prompt(self, version, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir):
+    def create_prompt(self, version, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir):
         """Create a prompt for the model to generate a code upgrade."""
         logger.info("Creating prompt for model")
         prompt = PROMPT_TEMPLATE.format(version=version, repo_api_url=repo_api_url, repo_url=repo_url, api_key=api_key, ssh_private_key_path=ssh_private_key_path, tmpdir=tmpdir)
@@ -140,8 +139,6 @@ def run_maven_test(code_dir: str) -> str:
         return result.stdout if result.returncode == 0 else result.stderr
     except subprocess.CalledProcessError as e:
         logger.info(f"Command '{command}' failed with return code {e.returncode}")
-        #logger.info("STDOUT:", e.stdout)
-        #logger.info("STDERR:", e.stderr)
         return e.stdout
     
     
@@ -161,3 +158,4 @@ def update_source_code(file_code, file_path):
 def get_current_timestamp():
     """ Get the current date and time """
     return datetime.now()    
+

@@ -6,26 +6,35 @@ from black import FileMode, format_str
 from git import Repo
 from langchain_core.tools import tool
 import subprocess
-
+import re
+import stat
 
 from utils import get_logger
 
 logger = get_logger()
 
+def remove_readonly(func, path, excinfo):
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
 @tool
 def clone_repo(url, repo_dir, ssh_private_key_path):
     """Clone the target repo to the local file system."""
-    logger.info(f"Cloning repo {url} to {repo_dir}. ssh_private_key_path={ssh_private_key_path}")
-    repo = Repo.clone_from(
-        url,
-        repo_dir,
-        env={
-            "GIT_SSH_COMMAND": f"ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {ssh_private_key_path}"
-        },
-    )
-    repo.config_writer().set_value("user", "name", "upgrade-code-bot").release()
-    repo.config_writer().set_value("user", "email", "upgrade@code.bot").release()
-    return repo
+    
+    try:
+        logger.info(f"Cloning repo {url} to {repo_dir}. ssh_private_key_path={ssh_private_key_path}")
+        repo = Repo.clone_from(
+            url,
+            repo_dir,
+            env={
+                "GIT_SSH_COMMAND": f"ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {ssh_private_key_path}"
+            },
+        )
+        repo.config_writer().set_value("user", "name", "upgrade-code-bot").release()
+        repo.config_writer().set_value("user", "email", "upgrade@code.bot").release()
+        return repo
+    except Exception as e:
+        print("Failed cloning " + e)
 
 
 def update_source_code(files, repo_dir, format_code=True):
@@ -71,12 +80,20 @@ def git_commit(branch_name, repo_file_path, commit_message):
     subprocess.run(["git", "push", "-u", "origin", branch_name])
 
 @tool
-def create_pull_request(api_key, repo_api_url, branch_name, pr_title, pr_description):
+def create_pull_request(api_key, github_ssh_url, branch_name, pr_title, pr_description):
         """Create a pull request using the GitHub API."""
+        repo_api_url = get_github_api_url(github_ssh_url)
         git_provider = GitHubProvider(api_key, repo_api_url)
         logger.info(f"Creating pull request. repo_api_url={repo_api_url}, branch_name={branch_name}")
         git_provider.create_pull_request(branch_name, pr_title, pr_description)
 
+
+def get_github_api_url(github_url):
+    """ Get the Github API Url for cloning """
+    pattern = "git@github.com:(.*).git"
+    match = re.search(pattern, github_url)
+    repo_name = match.group(1)
+    return f'https://api.github.com/repos/{repo_name}'
 
 # can be implemented for other git platforms (e.g. gitlab)
 class GitProvider(ABC):
