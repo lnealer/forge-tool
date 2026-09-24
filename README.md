@@ -6,17 +6,17 @@ Setup:
 3. Setup AWS config params in AWS Systems Manager. You'll need a Github PAT in forge_tool_api_key and a SSH key for git in forge_tool_ssh_private_key.
 4. Make sure you've exported your AWS credentials locally.
 5. Run:\
-    cd python\
-    python upgrade_code.py
+    streamlit run python/chat.py
 
 Current state:
 This tool can accept a git repository and upgrade details, clone and modify the given repo, run unit tests, and submit a PR. 
 
 
 TODO:
-- Chat functionality
+- Chat functionality ✔
 - Additional agent(s) for review
 - Test harness
 - Additional guard rails
-- Nicer UI (?) (cleaner logging, chat ui, etc.)
 - Better, more complex test repo(s) (including struts, etc.)
+
+ streamlit run python/chat.py -- --github_url git@github.com:lnealer/test_spring_upgrade_repo.git

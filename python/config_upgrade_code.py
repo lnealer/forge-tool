@@ -1,16 +1,14 @@
 import os
 import tempfile
-import time
 import re
 import argparse
 
-from git_utils import GitHubProvider
 from utils import get_logger, get_config
-from bedrock import Claude
-import logging
+from agent import Claude
+import streamlit as st
 
-# logger = get_logger()
-logger = logging.getLogger(__name__)
+
+logger = get_logger()
 
 PARAMETER_NAMES = [
     "ssh_private_key", "api_key"
@@ -19,11 +17,7 @@ MODEL_AWS_REGION = "us-east-1"
 SSH_PRIVATE_KEY_FILENAME = "ssh_private_key"
 PARAMETER_STORE_PREFIX = "forge_tool_"
 
-def upgrade_code(request):
-    """Lambda handler for the upgrade function.
-    """
-
-    print(f"Processing event: {request}")
+def config_upgrade_code(request):
     upgrade_details = request["upgrade_details"]
     repo_url = request["github_url"]
     repo_api_url = request["repo_api_url"]
@@ -32,27 +26,18 @@ def upgrade_code(request):
     config = get_config(PARAMETER_STORE_PREFIX, PARAMETER_NAMES)
     ssh_private_key = config["ssh_private_key"]
     api_key = config["api_key"]
-    #api_key = os.getenv('GIT_API_KEY')
 
     # Select a model provider to perform the code generation
     tmpdir = tempfile.mkdtemp()
-    print(tmpdir)
     agent = Claude(model_aws_region=MODEL_AWS_REGION, working_dir=tmpdir)
-
-    # branch_name = f"upgrade-code-{round(time.time())}"
-    # repo_name = repo_url.split("/")[-1]
 
     # Prepare SSH credentials for cloning the target repo
     ssh_private_key_path = os.path.join(tmpdir, "ssh_private_key")
     write_ssh_key(ssh_private_key, ssh_private_key_path)
     
-    # Trigger the code generation 
-    result = agent.upgrade_code(upgrade_details, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir)
 
-    logger.info("Upgrade complete")
-
-    return result
-
+    prompt = agent.create_prompt(upgrade_details, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir)
+    return agent, prompt
 
 def write_ssh_key(value, file_path):
     """Retrieve git SSH private key from SSM and write to file."""
@@ -66,10 +51,10 @@ def get_github_api_url(github_url):
     pattern = "git@github.com:(.*).git"
     match = re.search(pattern, github_url)
     repo_name = match.group(1)
-    print(repo_name)
     return f'https://api.github.com/repos/{repo_name}'
 
-if __name__ == "__main__":
+@st.cache_resource
+def setup_upgrade_code():
     parser = argparse.ArgumentParser(
         description="Code upgrade tool."
     )
@@ -77,19 +62,21 @@ if __name__ == "__main__":
     parser.add_argument("--github_url", required=False, type=str, help="The GitHub Repo URL to upgrade")
     args = parser.parse_args()
 
-    # TODO: make this part of chat
     github_url = args.github_url
     upgrade_details = args.upgrade_details
     if (not github_url):
-        github_url = input('Enter the Github URL: ')
+        github_url = input('Enter the Github URL: ') or 'git@github.com:lnealer/test_spring_upgrade_repo.git'
     if (not upgrade_details):
         upgrade_details = input('What would you like to upgrade? (Spring boot 2.7.17 Java 17) ') or 'Spring boot 2.7.17 Java 17'
 
     repo_api_url = get_github_api_url(github_url)
 
-    upgrade_code({
+    # git@github.com:lnealer/test_spring_upgrade_repo.git
+    return config_upgrade_code({
         "github_url": github_url,
         "upgrade_details": upgrade_details,
         "repo_api_url": repo_api_url,
-    }
-    )
+    })
+
+if __name__ == "__main__":
+    setup_upgrade_code()
