@@ -10,6 +10,8 @@ st.set_page_config(page_title="Forge Chatbot", page_icon="🤖", layout="centere
 st.title("🤖 Forge Chatbot")
 st.caption("Powered by AWS Bedrock & Streamlit")
 
+logger = get_logger()
+
 
 def open_chat(agent, prompt):
 
@@ -68,5 +70,6 @@ def open_chat(agent, prompt):
 
 
 if __name__ == "__main__":
+    logger.info("Starting upgrade...")
     agent, prompt = setup_upgrade_code()
     open_chat(agent, prompt)

@@ -8,6 +8,7 @@ from agent import Claude
 import streamlit as st
 
 
+
 logger = get_logger()
 
 PARAMETER_NAMES = [
@@ -16,6 +17,8 @@ PARAMETER_NAMES = [
 MODEL_AWS_REGION = "us-east-1"
 SSH_PRIVATE_KEY_FILENAME = "ssh_private_key"
 PARAMETER_STORE_PREFIX = "forge_tool_"
+
+KB_DIRECTORY = "./knowledge-base"
 
 def config_upgrade_code(request):
     upgrade_details = request["upgrade_details"]
@@ -38,6 +41,7 @@ def config_upgrade_code(request):
 
     prompt = agent.create_prompt(upgrade_details, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir)
     return agent, prompt
+
 
 def write_ssh_key(value, file_path):
     """Retrieve git SSH private key from SSM and write to file."""

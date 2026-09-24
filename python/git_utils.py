@@ -34,7 +34,7 @@ def clone_repo(url, repo_dir, ssh_private_key_path):
         repo.config_writer().set_value("user", "email", "upgrade@code.bot").release()
         return repo
     except Exception as e:
-        print("Failed cloning " + e)
+        print("Failed cloning " + str(e))
 
 
 def update_source_code(files, repo_dir, format_code=True):

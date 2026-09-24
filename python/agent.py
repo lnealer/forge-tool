@@ -13,7 +13,8 @@ from datetime import datetime
 from colorama import Fore, Back, Style
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
-
+from langchain_aws.retrievers import AmazonKnowledgeBasesRetriever
+from langchain_core.tools import create_retriever_tool
 
 from utils import get_logger
 
@@ -31,10 +32,11 @@ Format the branch name like 'spring-upgrade-[current timestamp]'.
 After writing the upgrades run unit tests using maven and address any issues.
 Then create a PR using repo_api_url and report any remaining issues in the PR description.
 Modify only the code relevant to the upgrade.
-Respond with a message when you're ready for a review. 
-When the user asks for changes, mke the relevant changes to the code and push to your pull request.
+Respond with a message when you're ready for a review or when you have a question.
 Censor API keys in messages.
-When you get feedback, push the changes to the remote for review.
+Before making code changes, check the knowledge base for relevant guidelines. Only use guidelines relevant to your change.
+When the user asks for changes, make the relevant changes to the code and then push to the remote for review.
+Use append or targeted updates rather than full rewrites when possible.
 
 <verion>
 {version}
@@ -95,8 +97,9 @@ class Claude(Model):
 
         toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "write_file", "list_directory"])
         tools = toolkit.get_tools()
-        llm =  unstructured_llm.bind_tools([run_maven_test, update_source_code, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit] + tools)
-        self.llm = create_agent(model=llm, tools=[run_maven_test, update_source_code, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit] + tools)
+        kb_tool = load_kb_tool()
+        llm =  unstructured_llm.bind_tools([run_maven_test, update_source_code, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit, kb_tool] + tools)
+        self.llm = create_agent(model=llm, tools=[run_maven_test, update_source_code, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit, kb_tool] + tools)
         logger.info("Initialized Claude")
 
     def create_prompt(self, version, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir):
@@ -104,6 +107,7 @@ class Claude(Model):
         logger.info("Creating prompt for model")
         prompt = PROMPT_TEMPLATE.format(version=version, repo_api_url=repo_api_url, repo_url=repo_url, api_key=api_key, ssh_private_key_path=ssh_private_key_path, tmpdir=tmpdir)
         return prompt
+
 
     def _invoke(self, prompt):
         """Invoke the model with the prompt."""
@@ -123,7 +127,23 @@ class Claude(Model):
 # TODO:
 # Add chat tool for getting user input
 # Add second reviewer agent
-# Add test harness tools    
+# Add test harness tools   
+# 
+def load_kb_tool():
+    retriever = AmazonKnowledgeBasesRetriever(
+        knowledge_base_id="IOI479HCER", 
+            region_name="us-east-1",
+        retrieval_config={"managedSearchConfiguration": {"numberOfResults": 4}},
+    )
+
+    kb_tool = create_retriever_tool(
+        retriever,
+        name="code_upgrade_knowledge_base",
+        description="Searches for coding guidelines for company-specific standards."
+    )
+
+    return kb_tool
+ 
 @tool
 def run_maven_test(code_dir: str) -> str:
     """Runs a shell command using subprocess and handles potential errors.
@@ -148,7 +168,7 @@ def update_source_code(file_code, file_path):
     file_path = file_path.replace("\\", "/")
     logger.info(f"Updating source code in {file_path}")
     try:
-        with open(file_path, "w") as f:
+        with open(file_path, "w" , encoding="utf-8") as f:
             logger.info(f'Writing to {file_path}')
             f.write(file_code)
     except Exception as e:

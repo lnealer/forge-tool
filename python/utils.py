@@ -3,8 +3,10 @@ import boto3
 
 
 def get_logger():
+    logging.basicConfig(level=logging.INFO)
     # """Configure a logger compatible with local python interpreter and Lambda."""
     logger = logging.getLogger("FORGE_TOOL")
+    logger.setLevel(logging.DEBUG)
     return logger
 
 
