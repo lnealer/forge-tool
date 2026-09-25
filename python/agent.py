@@ -68,9 +68,8 @@ class Model:
         conversation = self.llm.invoke({"messages": conversation})
         return conversation
     
-    async def invoke(self, conversation, timeout=600): # 10 minute timeout
-        async with asyncio.timeout:
-            return self.llm.invoke({"messages": conversation})
+    def invoke(self, conversation):
+        return self.llm.invoke({"messages": conversation})
 
 class Claude(Model):
     """Claude model class."""
@@ -88,6 +87,7 @@ class Claude(Model):
             client=bedrock_client,
             region_name = model_aws_region,
             model_id=model_id,
+            max_tokens=5000,
             model_kwargs={
                 "temperature": 0.0,
                 "max_tokens": 10000,

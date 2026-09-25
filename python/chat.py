@@ -21,7 +21,7 @@ def open_chat(agent, prompt):
         # get bot summary
         message = "Summarize your instructions and get confirmation to proceed."
         summary_convo = st.session_state.messages + [HumanMessage(message)]
-        summary_convo = asyncio.run(agent.invoke(summary_convo))
+        summary_convo = agent.invoke(summary_convo)
 
         st.session_state.messages.append(summary_convo["messages"][-1])
 
@@ -51,12 +51,9 @@ def open_chat(agent, prompt):
             response_placeholder.markdown("*Thinking...*")
             
             try:
-                try: 
-                    response = asyncio.run(agent.invoke(st.session_state.messages))
-                    # Extract output text
-                    assistant_response = response["messages"][-1].content
-                except TimeoutError:
-                    assistant_response = "Oops that process timed out. Should I continue?"
+                response = agent.invoke(st.session_state.messages)
+                # Extract output text
+                assistant_response = response["messages"][-1].content
                 
                 # Update UI with the final answer
                 response_placeholder.markdown(assistant_response)
