@@ -6,8 +6,7 @@ import argparse
 from utils import get_logger, get_config
 from agent import Claude
 import streamlit as st
-
-
+from git_utils import get_github_api_url
 
 logger = get_logger()
 
@@ -49,13 +48,6 @@ def write_ssh_key(value, file_path):
     with open(file_path, "w") as f:
         f.write(value)
     os.chmod(file_path, int("600", base=8))
-
-
-def get_github_api_url(github_url):
-    pattern = "git@github.com:(.*).git"
-    match = re.search(pattern, github_url)
-    repo_name = match.group(1)
-    return f'https://api.github.com/repos/{repo_name}'
 
 @st.cache_resource
 def setup_upgrade_code():

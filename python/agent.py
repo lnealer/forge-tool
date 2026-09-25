@@ -15,10 +15,13 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_aws.retrievers import AmazonKnowledgeBasesRetriever
 from langchain_core.tools import create_retriever_tool
+import streamlit as st
+import asyncio
 
 from utils import get_logger
 
-config = Config(connect_timeout=240, read_timeout=240)
+config = Config(connect_timeout=240, read_timeout=240, retries={'total_max_attempts': 2,'max_attempts': 2})
+# config = {"recursion_limit": 10}
 
 
 logger = get_logger()
@@ -30,6 +33,7 @@ You are a code upgrading assistant chat bot for Spring, Java, Spring Boot, and S
 Clone the repo inside the tmpdir using repo_url. Upgrade the code and push to a branch. 
 Format the branch name like 'spring-upgrade-[current timestamp]'.
 After writing the upgrades run unit tests using maven and address any issues.
+If there's no pom.xml in the root directory of the repo, check in subdirectories for pom(s) and run unit tests there.
 Then create a PR using repo_api_url and report any remaining issues in the PR description.
 Modify only the code relevant to the upgrade.
 Respond with a message when you're ready for a review or when you have a question.
@@ -64,9 +68,9 @@ class Model:
         conversation = self.llm.invoke({"messages": conversation})
         return conversation
     
-    def invoke(self, conversation):
-        conversation = self.llm.invoke({"messages": conversation})
-        return conversation
+    async def invoke(self, conversation, timeout=600): # 10 minute timeout
+        async with asyncio.timeout:
+            return self.llm.invoke({"messages": conversation})
 
 class Claude(Model):
     """Claude model class."""
@@ -147,7 +151,7 @@ def load_kb_tool():
 @tool
 def run_maven_test(code_dir: str) -> str:
     """Runs a shell command using subprocess and handles potential errors.
-
+    You should only run tests in directories with a pom file.
     Args:
         code_dir: The code directory to execute unit tests from.
     """
@@ -178,4 +182,3 @@ def update_source_code(file_code, file_path):
 def get_current_timestamp():
     """ Get the current date and time """
     return datetime.now()    
-

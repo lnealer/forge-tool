@@ -5,13 +5,14 @@ import streamlit as st
 from botocore.exceptions import ClientError
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 import traceback
+import asyncio
+from langchain_core.tools import tool
 
 st.set_page_config(page_title="Forge Chatbot", page_icon="🤖", layout="centered")
 st.title("🤖 Forge Chatbot")
 st.caption("Powered by AWS Bedrock & Streamlit")
 
 logger = get_logger()
-
 
 def open_chat(agent, prompt):
 
@@ -20,7 +21,8 @@ def open_chat(agent, prompt):
         # get bot summary
         message = "Summarize your instructions and get confirmation to proceed."
         summary_convo = st.session_state.messages + [HumanMessage(message)]
-        summary_convo = agent.invoke(summary_convo)
+        summary_convo = asyncio.run(agent.invoke(summary_convo))
+
         st.session_state.messages.append(summary_convo["messages"][-1])
 
     for message in st.session_state.messages:
@@ -49,10 +51,12 @@ def open_chat(agent, prompt):
             response_placeholder.markdown("*Thinking...*")
             
             try:
-                response = agent.invoke(st.session_state.messages)
-                
-                # Extract output text
-                assistant_response = response["messages"][-1].content
+                try: 
+                    response = asyncio.run(agent.invoke(st.session_state.messages))
+                    # Extract output text
+                    assistant_response = response["messages"][-1].content
+                except TimeoutError:
+                    assistant_response = "Oops that process timed out. Should I continue?"
                 
                 # Update UI with the final answer
                 response_placeholder.markdown(assistant_response)

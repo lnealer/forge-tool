@@ -63,21 +63,26 @@ def create_branch(branch_name, repo_file_path, commit_message):
     logger.info(f"Creating branch. file_path={repo_file_path}")
     repo_file_path =repo_file_path.replace("\\", "/")
     os.chdir(repo_file_path)
-    subprocess.run(["git", "checkout", "-q", "-b", branch_name])
-    subprocess.run(["git", "add", "."])
-    subprocess.run(["git", "commit", "-q", "-m", commit_message])
-    subprocess.run(["git", "push", "-q", "-u", "origin", branch_name])
+    try:
+        subprocess.run(["git", "checkout", "-b", branch_name], shell=True, capture_output=True, text=True)
+        subprocess.run(["git", "add", "."], shell=True, capture_output=True, text=True)
+        subprocess.run(["git", "commit", "-m", commit_message], shell=True, capture_output=True, text=True)
+        subprocess.run(["git", "push", "-u", "origin", branch_name],shell=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as e:
+        logger.info(f"Create branch failed with return code {e.returncode}")
+        return e.stdout
+    
 
 @tool
 def git_commit(branch_name, repo_file_path, commit_message):
     """Commit changes and and push to the remote."""
     repo_file_path =repo_file_path.replace("\\", "/")
-    logger.info(f"Creating branch. file_path={repo_file_path}")
+    logger.info(f"Writing commits to remote. file_path={repo_file_path}")
     repo_file_path =repo_file_path.replace("\\", "/")
     os.chdir(repo_file_path)
-    subprocess.run(["git", "add", "."])
-    subprocess.run(["git", "commit", "-m", commit_message])
-    subprocess.run(["git", "push", "-u", "origin", branch_name])
+    subprocess.run(["git", "add", "."], shell=True, capture_output=True, text=True)
+    subprocess.run(["git", "commit", "-m", commit_message], shell=True, capture_output=True, text=True)
+    subprocess.run(["git", "push", "-u", "origin", branch_name], shell=True, capture_output=True, text=True)
 
 @tool
 def create_pull_request(api_key, github_ssh_url, branch_name, pr_title, pr_description):
@@ -90,8 +95,12 @@ def create_pull_request(api_key, github_ssh_url, branch_name, pr_title, pr_descr
 
 def get_github_api_url(github_url):
     """ Get the Github API Url for cloning """
-    pattern = "git@github.com:(.*).git"
-    match = re.search(pattern, github_url)
+    pattern1 = "git@github.com:(.*).git"
+    pattern2 = "https://github.com/(.*).git"
+    match = re.search(pattern1, github_url)
+    if (not match):
+        match = re.search(pattern2, github_url)
+
     repo_name = match.group(1)
     return f'https://api.github.com/repos/{repo_name}'
 
