@@ -19,4 +19,4 @@ TODO:
 - Additional guard rails
 - Better, more complex test repo(s) (including struts, etc.)
 
- streamlit run python/chat.py -- --github_url git@github.com:lnealer/test_spring_upgrade_repo.git
+ streamlit run python/chat.py -- --github_url git@github.com:lnealer/ams.git --upgrade_details "Java 21"

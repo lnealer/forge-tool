@@ -31,16 +31,15 @@ DEFAULT_MODEL_REGION = "us-east-1";
 PROMPT_TEMPLATE = """
 You are a code upgrading assistant chat bot for Spring, Java, Spring Boot, and Struts.
 Clone the repo inside the tmpdir using repo_url. Upgrade the code and push to a branch. 
-Format the branch name like 'spring-upgrade-[current timestamp]'.
-After writing the upgrades run unit tests using maven and address any issues.
-If there's no pom.xml in the root directory of the repo, check in subdirectories for pom(s) and run unit tests there.
+Format the branch name like 'forge-upgrade-[current timestamp]'.
 Then create a PR using repo_api_url and report any remaining issues in the PR description.
 Modify only the code relevant to the upgrade.
 Respond with a message when you're ready for a review or when you have a question.
 Censor API keys in messages.
 Before making code changes, check the knowledge base for relevant guidelines. Only use guidelines relevant to your change.
+After writing the upgrades, run unit tests for all modules. Check the output and fix any issues. Report issues you can't fix. Include the test results in the PR description.
 When the user asks for changes, make the relevant changes to the code and then push to the remote for review.
-Use append or targeted updates rather than full rewrites when possible.
+Push additional changes to your original branch.
 
 <verion>
 {version}
@@ -87,7 +86,7 @@ class Claude(Model):
             client=bedrock_client,
             region_name = model_aws_region,
             model_id=model_id,
-            max_tokens=5000,
+            max_tokens=10000,
             model_kwargs={
                 "temperature": 0.0,
                 "max_tokens": 10000,
@@ -102,8 +101,8 @@ class Claude(Model):
         toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "write_file", "list_directory"])
         tools = toolkit.get_tools()
         kb_tool = load_kb_tool()
-        llm =  unstructured_llm.bind_tools([run_maven_test, update_source_code, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit, kb_tool] + tools)
-        self.llm = create_agent(model=llm, tools=[run_maven_test, update_source_code, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit, kb_tool] + tools)
+        llm =  unstructured_llm.bind_tools([run_maven_test, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit, kb_tool] + tools)
+        self.llm = create_agent(model=llm, tools=[run_maven_test, create_pull_request, clone_repo, create_branch, get_current_timestamp, git_commit, kb_tool] + tools)
         logger.info("Initialized Claude")
 
     def create_prompt(self, version, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir):
@@ -150,33 +149,39 @@ def load_kb_tool():
  
 @tool
 def run_maven_test(code_dir: str) -> str:
-    """Runs a shell command using subprocess and handles potential errors.
-    You should only run tests in directories with a pom file.
+    """Runs a shell command using subprocess to run maven tests and returns output.
     Args:
-        code_dir: The code directory to execute unit tests from.
+        code_dir: The code directory to execute from.
     """
     logger.info(f"Running: mvn clean test -f {code_dir}")
-    command = f'mvn clean test -f {code_dir}'
+    command = f'mvn -U clean test -f {code_dir}'
     try:
         # Capture the output and check the return code
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        result = subprocess.run(command, check=True, shell=True, capture_output=True, text=True)
+        logger.info(f"Mvn output: {result.stdout}")
         return result.stdout if result.returncode == 0 else result.stderr
     except subprocess.CalledProcessError as e:
         logger.info(f"Command '{command}' failed with return code {e.returncode}")
+        logger.info(f"Mvn output: {e.stdout}")
         return e.stdout
-    
-    
+
 @tool
-def update_source_code(file_code, file_path):
-    """Overwrite file at file_path with contents of file_code """
-    file_path = file_path.replace("\\", "/")
-    logger.info(f"Updating source code in {file_path}")
+def run_maven_compile(code_dir: str) -> str:
+    """Runs a shell command using subprocess to compile application and returns output.
+    Args:
+        code_dir: The code directory to execute from.
+    """
+    logger.info(f"Running maven compile {code_dir}")
+    command = f'mvn -U clean package -f {code_dir}'
     try:
-        with open(file_path, "w" , encoding="utf-8") as f:
-            logger.info(f'Writing to {file_path}')
-            f.write(file_code)
-    except Exception as e:
-        logger.error(f"Failed writing to {file_path}: {e}")  
+        # Capture the output and check the return code
+        result = subprocess.run(command, check=True, shell=True, capture_output=True, text=True)
+        logger.info(f"Mvn output: {result.stdout}")
+        return result.stdout if result.returncode == 0 else result.stderr
+    except subprocess.CalledProcessError as e:
+        logger.info(f"Command '{command}' failed with return code {e.returncode}")
+        logger.info(f"Mvn output: {e.stdout}")
+        return e.stdout
 
 @tool
 def get_current_timestamp():

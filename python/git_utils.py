@@ -35,21 +35,7 @@ def clone_repo(url, repo_dir, ssh_private_key_path):
         return repo
     except Exception as e:
         print("Failed cloning " + str(e))
-
-
-def update_source_code(files, repo_dir, format_code=True):
-    """Overwrite files in target repo."""
-    logger.info(f"Updating source code in {repo_dir}")
-    for file in files:
-        if format_code:
-            contents = file.code
-        with open(os.path.join(repo_dir, file.filename), "w") as f:
-            logger.info(f'Writing to {file.filename}')
-            try:
-                f.write(contents)
-            except Exception as e:
-                logger.error(f"Failed writing to {file.filename}: {e}")
-
+        return str(e)
 
 def format(content):
     """Format code."""
@@ -64,10 +50,10 @@ def create_branch(branch_name, repo_file_path, commit_message):
     repo_file_path =repo_file_path.replace("\\", "/")
     os.chdir(repo_file_path)
     try:
-        subprocess.run(["git", "checkout", "-b", branch_name], shell=True, capture_output=True, text=True)
-        subprocess.run(["git", "add", "."], shell=True, capture_output=True, text=True)
-        subprocess.run(["git", "commit", "-m", commit_message], shell=True, capture_output=True, text=True)
-        subprocess.run(["git", "push", "-u", "origin", branch_name],shell=True, capture_output=True, text=True)
+        subprocess.run(["git", "checkout", "-b", branch_name], check=True, shell=True, capture_output=True, text=True)
+        subprocess.run(["git", "add", "."], shell=True, check=True, capture_output=True, text=True)
+        subprocess.run(["git", "commit", "-m", commit_message], check=True, shell=True, capture_output=True, text=True)
+        subprocess.run(["git", "push", "-u", "origin", branch_name], check=True,shell=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
         logger.info(f"Create branch failed with return code {e.returncode}")
         return e.stdout
@@ -80,9 +66,14 @@ def git_commit(branch_name, repo_file_path, commit_message):
     logger.info(f"Writing commits to remote. file_path={repo_file_path}")
     repo_file_path =repo_file_path.replace("\\", "/")
     os.chdir(repo_file_path)
-    subprocess.run(["git", "add", "."], shell=True, capture_output=True, text=True)
-    subprocess.run(["git", "commit", "-m", commit_message], shell=True, capture_output=True, text=True)
-    subprocess.run(["git", "push", "-u", "origin", branch_name], shell=True, capture_output=True, text=True)
+    try:
+        subprocess.run(["git", "add", "."], shell=True, check=True, capture_output=True, text=True)
+        subprocess.run(["git", "commit", "-m", commit_message], check=True, shell=True, capture_output=True, text=True)
+        subprocess.run(["git", "push", "-u", "origin", branch_name], check=True, shell=True, capture_output=True, text=True)
+        return 0
+    except subprocess.CalledProcessError as e:
+        logger.info(f"Command failed with return code {e.returncode} and error {e.stdout}")
+        return e.stdout
 
 @tool
 def create_pull_request(api_key, github_ssh_url, branch_name, pr_title, pr_description):
@@ -90,7 +81,7 @@ def create_pull_request(api_key, github_ssh_url, branch_name, pr_title, pr_descr
         repo_api_url = get_github_api_url(github_ssh_url)
         git_provider = GitHubProvider(api_key, repo_api_url)
         logger.info(f"Creating pull request. repo_api_url={repo_api_url}, branch_name={branch_name}")
-        git_provider.create_pull_request(branch_name, pr_title, pr_description)
+        return git_provider.create_pull_request(branch_name, pr_title, pr_description)
 
 
 def get_github_api_url(github_url):
@@ -141,5 +132,7 @@ class GitHubProvider(GitProvider):
 
         if response.status_code == 201:
             logger.info(f"Pull request created ({response.json()['html_url']})")
+            return response.text or "Pull request created"
         else:
             logger.info(f"Failed to create pull request with error: {response.text}")
+            return response.text
