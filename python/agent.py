@@ -133,8 +133,9 @@ class Claude(Model):
 # Add test harness tools   
 # 
 def load_kb_tool():
+    kb_id = os.getenv("KNOWLEDGE_BASE_ID") # could also be an ssm param?
     retriever = AmazonKnowledgeBasesRetriever(
-        knowledge_base_id="IOI479HCER", 
+        knowledge_base_id=kb_id, 
             region_name="us-east-1",
         retrieval_config={"managedSearchConfiguration": {"numberOfResults": 4}},
     )
