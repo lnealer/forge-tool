@@ -17,8 +17,7 @@ def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-@tool
-def clone_repo(url, repo_dir, ssh_private_key_path):
+def clone_repo(url, repo_dir,  ssh_private_key_path):
     """Clone the target repo to the local file system."""
     
     try:
@@ -41,27 +40,63 @@ def format(content):
     """Format code."""
     return format_str(content, mode=FileMode())
 
-
-@tool
-def create_branch(branch_name, repo_file_path, commit_message):
-    """Create a branch, commit changes, and push to the remote."""
+def create_new_branch(branch_name, repo_file_path):
+    """Create a new branch. Returns the current branch name"""
     repo_file_path =repo_file_path.replace("\\", "/")
     logger.info(f"Creating branch. file_path={repo_file_path}")
     repo_file_path =repo_file_path.replace("\\", "/")
     os.chdir(repo_file_path)
+    current_branch = get_active_branch_name() 
+    if (current_branch != "main"):
+        logger.info("Remaining on branch "+ current_branch)
+        return current_branch
     try:
-        subprocess.run(["git", "checkout", "-b", branch_name], check=True, shell=True, capture_output=True, text=True)
-        subprocess.run(["git", "add", "."], shell=True, check=True, capture_output=True, text=True)
-        subprocess.run(["git", "commit", "-m", commit_message], check=True, shell=True, capture_output=True, text=True)
-        subprocess.run(["git", "push", "-u", "origin", branch_name], check=True,shell=True, capture_output=True, text=True)
+        checkout = subprocess.run(["git", "checkout", "-b", branch_name], check=True, shell=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
-        logger.info(f"Create branch failed with return code {e.returncode}")
-        return e.stdout
+        logger.info(f"Create branch failed with return code {e.returncode} and error {e.stderr}, {e.stdout}\n")
+        return e.stderr
     
+def create_branch(branch_name, repo_file_path, commit_message):
+    """Create a new branch. Returns the current branch name"""
+    repo_file_path =repo_file_path.replace("\\", "/")
+    logger.info(f"Creating branch. file_path={repo_file_path}")
+    repo_file_path =repo_file_path.replace("\\", "/")
+    os.chdir(repo_file_path)
+    current_branch = get_active_branch_name() 
+    if (current_branch != "main"):
+        logger.info("Remaining on branch "+ current_branch)
+        return current_branch
+    try:
+        checkout = subprocess.run(["git", "checkout", "-b", branch_name], check=True, shell=True, capture_output=True, text=True)
+        add = subprocess.run(["git", "add", "."], shell=True, check=True, capture_output=True, text=True)
+        commit = subprocess.run(["git", "commit", "-m", commit_message], check=True, shell=True, capture_output=True, text=True)
+        push = subprocess.run(["git", "push", "-u", "origin", branch_name], check=True,shell=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as e:
+        logger.info(f"Create branch failed with return code {e.returncode} and error {e.stderr}, {e.stdout}\n")
+        return e.stderr
+    
+    current_branch=get_active_branch_name()
+    logger.info("On branch "+ current_branch)
+    return current_branch
+
+
+def get_active_branch_name():
+    """Retrieve the name of the current git branch. Returns branch_name."""
+    logger.info("Getting active branch name...")
+    try:
+        # Runs 'git branch --show-current' and decodes the output string
+        branch = subprocess.check_output(
+            ["git", "branch", "--show-current"], 
+            stderr=subprocess.DEVNULL
+        ).decode("utf-8").strip()
+        
+        return branch if branch else "Detached HEAD"
+    except subprocess.CalledProcessError:
+        return "Not a git repository (or git not installed)"
 
 @tool
 def git_commit(branch_name, repo_file_path, commit_message):
-    """Commit changes and and push to the remote."""
+    """Commit changes and and push to the remote branch."""
     repo_file_path =repo_file_path.replace("\\", "/")
     logger.info(f"Writing commits to remote. file_path={repo_file_path}")
     repo_file_path =repo_file_path.replace("\\", "/")
@@ -72,8 +107,8 @@ def git_commit(branch_name, repo_file_path, commit_message):
         subprocess.run(["git", "push", "-u", "origin", branch_name], check=True, shell=True, capture_output=True, text=True)
         return 0
     except subprocess.CalledProcessError as e:
-        logger.info(f"Command failed with return code {e.returncode} and error {e.stdout}")
-        return e.stdout
+        logger.info(f"Command failed with return code {e.returncode} and error {e.stderr}")
+        return e.stderr
 
 @tool
 def create_pull_request(api_key, github_ssh_url, branch_name, pr_title, pr_description):
@@ -83,6 +118,13 @@ def create_pull_request(api_key, github_ssh_url, branch_name, pr_title, pr_descr
         logger.info(f"Creating pull request. repo_api_url={repo_api_url}, branch_name={branch_name}")
         return git_provider.create_pull_request(branch_name, pr_title, pr_description)
 
+@tool
+def update_pull_request(api_key, github_ssh_url, branch_name, pr_description):
+        """Update a pull request using the GitHub API."""
+        repo_api_url = get_github_api_url(github_ssh_url)
+        git_provider = GitHubProvider(api_key, repo_api_url)
+        logger.info(f"Updating pull request. repo_api_url={repo_api_url}, branch_name={branch_name}")
+        return git_provider.update_pull_request(branch_name, pr_description)
 
 def get_github_api_url(github_url):
     """ Get the Github API Url for cloning """
@@ -94,6 +136,18 @@ def get_github_api_url(github_url):
 
     repo_name = match.group(1)
     return f'https://api.github.com/repos/{repo_name}'
+
+
+def get_repo_name(github_url):
+    """ Get the Github API Url for cloning """
+    pattern1 = "git@github.com:.*/(.*).git"
+    pattern2 = "https://github.com/.*/(.*).git"
+    match = re.search(pattern1, github_url)
+    if (not match):
+        match = re.search(pattern2, github_url)
+
+    repo_name = match.group(1)
+    return repo_name
 
 # can be implemented for other git platforms (e.g. gitlab)
 class GitProvider(ABC):
@@ -135,4 +189,34 @@ class GitHubProvider(GitProvider):
             return response.text or "Pull request created"
         else:
             logger.info(f"Failed to create pull request with error: {response.text}")
+            return response.text
+    
+    def get_pull_request(self, branch):
+
+        url = self.url
+        logger.info(url)
+        response = requests.get(url, headers=self.headers, timeout=30)
+
+        if response.status_code != 200:
+            logger.info(f"Failed to retrieve pull request with error: {response.text}")
+            return response.text
+
+        pulls = response.json()
+        return next((x["url"] for x in pulls if x["head"]["ref"] == branch), None)
+    
+
+    def update_pull_request(self, branch, description):
+        """Update a pull request description for given branch"""
+        url = self.get_pull_request(branch)
+        data = {
+            "body": description,
+        }
+
+        response = requests.post(url, json=data, headers=self.headers, timeout=30)
+
+        if response.status_code == 200:
+            logger.info(f"Pull request updated ({response.json()['html_url']})")
+            return response.text or "Pull request updated"
+        else:
+            logger.info(f"Failed to update pull request with error: {response.text}")
             return response.text
