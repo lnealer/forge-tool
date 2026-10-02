@@ -4,7 +4,7 @@ import re
 import argparse
 
 from utils import get_logger, get_config
-from agent import Claude
+from agent import Claude,NovaPro
 import streamlit as st
 from git_utils import get_github_api_url
 
@@ -31,15 +31,14 @@ def config_upgrade_code(request):
 
     # Select a model provider to perform the code generation
     tmpdir = tempfile.mkdtemp()
-    agent = Claude(model_aws_region=MODEL_AWS_REGION, working_dir=tmpdir)
+    claude = Claude(model_aws_region=MODEL_AWS_REGION, working_dir=tmpdir)
+    novaPro = NovaPro(model_aws_region=MODEL_AWS_REGION, working_dir=tmpdir)
 
     # Prepare SSH credentials for cloning the target repo
     ssh_private_key_path = os.path.join(tmpdir, "ssh_private_key")
     write_ssh_key(ssh_private_key, ssh_private_key_path)
     
-
-    prompt = agent.create_prompt(upgrade_details, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir)
-    return agent, prompt
+    return claude, novaPro
 
 
 def write_ssh_key(value, file_path):

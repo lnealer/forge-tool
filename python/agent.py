@@ -28,13 +28,13 @@ logger = get_logger()
 
 DEFAULT_MODEL = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 DEFAULT_MODEL_REGION = "us-east-1";
+REVIEWER_MODEL ="global.amazon.nova-pro-v1:0"
 PROMPT_TEMPLATE = """
-You are a code upgrading assistant chat bot for Spring, Java, Spring Boot, and Struts.
+You are a code upgrading assistant tool for Spring, Java, Spring Boot, and Struts.
 Clone the repo inside the tmpdir using repo_url. Upgrade the code and push to a branch. 
 Format the branch name like 'forge-upgrade-[current timestamp]'.
 Then create a PR using repo_api_url and report any remaining issues in the PR description.
 Modify only the code relevant to the upgrade.
-Respond with a message when you're ready for a review or when you have a question.
 Censor API keys in messages.
 Before making code changes, check the knowledge base for relevant guidelines. Only use guidelines relevant to your change.
 After writing the upgrades, run unit tests for all modules. Check the output and fix any issues. Report issues you can't fix. Include the test results in the PR description.
@@ -70,6 +70,35 @@ class Model:
     def invoke(self, conversation):
         return self.llm.invoke({"messages": conversation})
 
+class NovaPro(Model):
+    def __init__(self, model_id=REVIEWER_MODEL, model_aws_region=DEFAULT_MODEL_REGION, working_dir=""):
+        logger.info(f"Initializing NovePro with model_id: {model_id} and region: {model_aws_region}")
+        bedrock_client = boto3.client(
+            "bedrock-runtime",
+            region_name=model_aws_region,
+            config=config
+        )
+
+        # Create agent with tools
+        self.unstructured_llm = ChatBedrock(
+            client=bedrock_client,
+            region_name = model_aws_region,
+            model_id=model_id,
+            max_tokens=10000,
+            model_kwargs={
+                "temperature": 0.0,
+                "max_tokens": 10000,
+            },
+        )
+
+        toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "list_directory"])
+        tools = toolkit.get_tools()
+        kb_tool = load_kb_tool()
+        llm =  self.unstructured_llm.bind_tools([clone_repo, create_branch, get_current_timestamp, git_commit, kb_tool] + tools)
+        self.llm = create_agent(model=llm, tools=[clone_repo, create_branch, get_current_timestamp, git_commit, kb_tool] + tools)
+        logger.info("Initialized Nova Pro")
+
+
 class Claude(Model):
     """Claude model class."""
 
@@ -89,12 +118,7 @@ class Claude(Model):
             max_tokens=10000,
             model_kwargs={
                 "temperature": 0.0,
-                "max_tokens": 10000,
-                # "top_p": 0.999,
-                # "top_k": 250,
-                # "stop_sequences": [
-                #     "\\n\\nHuman::",
-                # ],
+                "max_tokens": 10000
             },
         )
 
