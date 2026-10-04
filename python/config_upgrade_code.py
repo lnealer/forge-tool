@@ -1,23 +1,21 @@
 import os
 import tempfile
-import re
 import argparse
 
+import settings
+import workdir
 from utils import get_logger, get_config
 from agent import Claude
 import streamlit as st
-from git_utils import get_github_api_url
+from git_utils import configure_github_token, get_github_api_url
 
 logger = get_logger()
 
-PARAMETER_NAMES = [
-    "ssh_private_key", "api_key"
-]
-MODEL_AWS_REGION = "us-east-1"
-SSH_PRIVATE_KEY_FILENAME = "ssh_private_key"
-PARAMETER_STORE_PREFIX = "forge_tool_"
+PARAMETER_NAMES = settings.SSM_PARAMETER_NAMES
+MODEL_AWS_REGION = settings.BEDROCK_MODEL_REGION
+PARAMETER_STORE_PREFIX = settings.PARAMETER_STORE_PREFIX
 
-KB_DIRECTORY = "./knowledge-base"
+KB_DIRECTORY = settings.KNOWLEDGE_BASE_DIRECTORY
 
 def config_upgrade_code(request):
     upgrade_details = request["upgrade_details"]
@@ -26,28 +24,22 @@ def config_upgrade_code(request):
 
     logger.info(f"Retrieving config")
     config = get_config(PARAMETER_STORE_PREFIX, PARAMETER_NAMES)
-    ssh_private_key = config["ssh_private_key"]
-    api_key = config["api_key"]
+    # The PAT stays in process memory; tools read it from there so it never
+    # has to pass through the model.
+    configure_github_token(config["api_key"])
 
     # Select a model provider to perform the code generation
-    tmpdir = tempfile.mkdtemp()
+    work_root = settings.WORK_ROOT or None
+    if work_root:
+        os.makedirs(work_root, exist_ok=True)
+    tmpdir = tempfile.mkdtemp(dir=work_root)
+    # Every tool resolves model-supplied paths against this sandbox.
+    workdir.set_working_dir(tmpdir)
     agent = Claude(model_aws_region=MODEL_AWS_REGION, working_dir=tmpdir)
 
-    # Prepare SSH credentials for cloning the target repo
-    ssh_private_key_path = os.path.join(tmpdir, "ssh_private_key")
-    write_ssh_key(ssh_private_key, ssh_private_key_path)
-    
-
-    prompt = agent.create_prompt(upgrade_details, repo_api_url, repo_url, api_key, ssh_private_key_path, tmpdir)
+    prompt = agent.create_prompt(upgrade_details, repo_api_url, repo_url, tmpdir)
     return agent, prompt
 
-
-def write_ssh_key(value, file_path):
-    """Retrieve git SSH private key from SSM and write to file."""
-    logger.info(f"Writing SSH key to {file_path}")
-    with open(file_path, "w") as f:
-        f.write(value)
-    os.chmod(file_path, int("600", base=8))
 
 @st.cache_resource
 def setup_upgrade_code():
@@ -58,16 +50,16 @@ def setup_upgrade_code():
     parser.add_argument("--github_url", required=False, type=str, help="The GitHub Repo URL to upgrade")
     args = parser.parse_args()
 
-    github_url = args.github_url
-    upgrade_details = args.upgrade_details
+    # CLI flag wins, then the .env default, then an interactive prompt.
+    github_url = args.github_url or settings.DEFAULT_GITHUB_URL
+    upgrade_details = args.upgrade_details or settings.DEFAULT_UPGRADE_DETAILS
     if (not github_url):
-        github_url = input('Enter the Github URL: ') or 'git@github.com:lnealer/test_spring_upgrade_repo.git'
+        github_url = input('Enter the Github URL: ')
     if (not upgrade_details):
-        upgrade_details = input('What would you like to upgrade? (Spring boot 2.7.17 Java 17) ') or 'Spring boot 2.7.17 Java 17'
+        upgrade_details = input('What would you like to upgrade? (e.g. Spring boot 2.7.17 Java 17) ')
 
     repo_api_url = get_github_api_url(github_url)
 
-    # git@github.com:lnealer/test_spring_upgrade_repo.git
     return config_upgrade_code({
         "github_url": github_url,
         "upgrade_details": upgrade_details,

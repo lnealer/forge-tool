@@ -1,0 +1,4 @@
+Drop company coding-guideline documents in this folder (.md, .txt, .pdf, .html,
+.docx, .csv, .xlsx). `./infra/deploy.sh --sync` uploads them to the knowledge
+base S3 bucket and starts a Bedrock ingestion job. The agent searches them
+with the `code_upgrade_knowledge_base` tool before making code changes.

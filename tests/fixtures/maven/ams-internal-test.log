@@ -1,0 +1,20 @@
+[INFO] Scanning for projects...
+[ERROR] [ERROR] Some problems were encountered while processing the POMs:
+[ERROR] 'dependencies.dependency.version' for javax.servlet:javax.servlet-api:jar is missing. @ line 135, column 17
+[ERROR] 'dependencies.dependency.version' for jstl:jstl:jar is missing. @ line 140, column 17
+[ERROR] 'dependencies.dependency.version' for javax.annotation:javax.annotation-api:jar is missing. @ line 144, column 17
+[ERROR] 'dependencies.dependency.version' for org.springframework.security:spring-security-test:jar must be a valid version but is '${spring-security.version}'. @ line 167, column 16
+ @ 
+[ERROR] The build could not read 1 project -> [Help 1]
+[ERROR]   
+[ERROR]   The project com.example.ams:AssetManagementInternalWeb:1.0.0-SNAPSHOT (/private/tmp/claude-501/-Users-raja-forge-tool/14dcfc75-2ad0-4188-bec2-d495d0693c2f/scratchpad/ams/ams-internal/AssetManagementInternalWeb/pom.xml) has 4 errors
+[ERROR]     'dependencies.dependency.version' for javax.servlet:javax.servlet-api:jar is missing. @ line 135, column 17
+[ERROR]     'dependencies.dependency.version' for jstl:jstl:jar is missing. @ line 140, column 17
+[ERROR]     'dependencies.dependency.version' for javax.annotation:javax.annotation-api:jar is missing. @ line 144, column 17
+[ERROR]     'dependencies.dependency.version' for org.springframework.security:spring-security-test:jar must be a valid version but is '${spring-security.version}'. @ line 167, column 16
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/ProjectBuildingException

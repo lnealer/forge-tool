@@ -1,3 +1,28 @@
 setup_env.sh
 __pycache__
 app.log
+app.log.*
+app.stdout.log*
+
+# Editor settings
+.vscode/
+
+# Local configuration (copy .env.example -> .env)
+.env
+.env.local
+
+# Virtualenv
+.venv
+venv
+
+# Infra scratch output
+infra/.deploy-out
+
+# Terraform (state is local; .terraform.lock.hcl IS committed)
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/*.tfplan
+infra/terraform/*.tfvars
+infra/terraform/crash.log
+infra/terraform/.terraform.tfstate.lock.info

@@ -1,0 +1,306 @@
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.example.ams:AssetManagementSharedServices:jar:1.0.0-SNAPSHOT
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-jar-plugin is missing. @ line 101, column 15
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] AMS Common                                                         [pom]
+[INFO] Asset Management Shared Common                                     [jar]
+[INFO] Asset Management Network Validation                                [jar]
+[INFO] Asset Management Shared Services                                   [jar]
+[INFO] 
+[INFO] ---------------------< com.example.ams:ams-common >---------------------
+[INFO] Building AMS Common 1.0.0-SNAPSHOT                                 [1/4]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ ams-common ---
+[INFO] 
+[INFO] ------------< com.example.ams:AssetManagementSharedCommon >-------------
+[INFO] Building Asset Management Shared Common 1.0.0-SNAPSHOT             [2/4]
+[INFO]   from AssetManagementSharedCommon/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ AssetManagementSharedCommon ---
+[INFO] Deleting /private/tmp/claude-501/-Users-raja-forge-tool/14dcfc75-2ad0-4188-bec2-d495d0693c2f/scratchpad/ams/ams-common/AssetManagementSharedCommon/target
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ AssetManagementSharedCommon ---
+[INFO] skip non existing resourceDirectory /private/tmp/claude-501/-Users-raja-forge-tool/14dcfc75-2ad0-4188-bec2-d495d0693c2f/scratchpad/ams/ams-common/AssetManagementSharedCommon/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ AssetManagementSharedCommon ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 57 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ AssetManagementSharedCommon ---
+[INFO] skip non existing resourceDirectory /private/tmp/claude-501/-Users-raja-forge-tool/14dcfc75-2ad0-4188-bec2-d495d0693c2f/scratchpad/ams/ams-common/AssetManagementSharedCommon/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ AssetManagementSharedCommon ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 5 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ AssetManagementSharedCommon ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running org.example.am.shared.domain.comparator.LegacyAssetTagComparatorTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in org.example.am.shared.domain.comparator.LegacyAssetTagComparatorTest
+[INFO] Running org.example.am.shared.domain.AssetTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in org.example.am.shared.domain.AssetTest
+[INFO] Running org.example.am.shared.domain.AddressTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.004 s -- in org.example.am.shared.domain.AddressTest
+[INFO] Running org.example.am.shared.domain.LoadableTypeTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in org.example.am.shared.domain.LoadableTypeTest
+[INFO] Running org.example.am.shared.domain.OrderTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in org.example.am.shared.domain.OrderTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 45, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] ----------< com.example.ams:AssetManagementNetworkValidation >----------
+[INFO] Building Asset Management Network Validation 1.0.0-SNAPSHOT        [3/4]
+[INFO]   from AssetManagementNetworkValidation/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ AssetManagementNetworkValidation ---
+[INFO] Deleting /private/tmp/claude-501/-Users-raja-forge-tool/14dcfc75-2ad0-4188-bec2-d495d0693c2f/scratchpad/ams/ams-common/AssetManagementNetworkValidation/target
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ AssetManagementNetworkValidation ---
+[INFO] skip non existing resourceDirectory /private/tmp/claude-501/-Users-raja-forge-tool/14dcfc75-2ad0-4188-bec2-d495d0693c2f/scratchpad/ams/ams-common/AssetManagementNetworkValidation/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ AssetManagementNetworkValidation ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 8 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ AssetManagementNetworkValidation ---
+[INFO] skip non existing resourceDirectory /private/tmp/claude-501/-Users-raja-forge-tool/14dcfc75-2ad0-4188-bec2-d495d0693c2f/scratchpad/ams/ams-common/AssetManagementNetworkValidation/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ AssetManagementNetworkValidation ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 6 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ AssetManagementNetworkValidation ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running org.example.am.network.domain.IPRangeTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.033 s -- in org.example.am.network.domain.IPRangeTest
+[INFO] Running org.example.am.network.validation.LanTypeAValidatorTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 s -- in org.example.am.network.validation.LanTypeAValidatorTest
+[INFO] Running org.example.am.network.validation.LanTypeBValidatorTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.004 s -- in org.example.am.network.validation.LanTypeBValidatorTest
+[INFO] Running org.example.am.network.validation.LanTypeCValidatorTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.004 s -- in org.example.am.network.validation.LanTypeCValidatorTest
+[INFO] Running org.example.am.network.validation.NetworkUtilsTest
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.005 s -- in org.example.am.network.validation.NetworkUtilsTest
+[INFO] Running org.example.am.network.validation.WanValidatorTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in org.example.am.network.validation.WanValidatorTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 47, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] -----------< com.example.ams:AssetManagementSharedServices >------------
+[INFO] Building Asset Management Shared Services 1.0.0-SNAPSHOT           [4/4]
+[INFO]   from AssetManagementSharedServices/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ AssetManagementSharedServices ---
+[INFO] Deleting /private/tmp/claude-501/-Users-raja-forge-tool/14dcfc75-2ad0-4188-bec2-d495d0693c2f/scratchpad/ams/ams-common/AssetManagementSharedServices/target
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ AssetManagementSharedServices ---
+[INFO] Copying 68 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ AssetManagementSharedServices ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 65 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ AssetManagementSharedServices ---
+[INFO] Copying 3 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ AssetManagementSharedServices ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 8 source files with javac [debug release 21] to target/test-classes
+[INFO] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ AssetManagementSharedServices ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running org.example.am.shared.dao.impl.CustomerDAOImplTest
+Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build what is described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html#0.3
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (/Users/raja/.m2/repository/net/bytebuddy/byte-buddy-agent/1.15.4/byte-buddy-agent-1.15.4.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+22:13:41.480 AMS-TEST INFO  [CustomerDAOImpl] Ordering disabled for customer 1001 by junit
+22:13:41.482 AMS-TEST INFO  [CustomerDAOImpl] Ordering enabled for customer 999999 by junit
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.955 s -- in org.example.am.shared.dao.impl.CustomerDAOImplTest
+[INFO] Running org.example.am.shared.dao.impl.OrderDAOImplTest
+22:13:41.504 AMS-TEST INFO  [OrderDAOImpl] Inserted order 100000 (ORD-NEW-1) for customer 1001
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 s -- in org.example.am.shared.dao.impl.OrderDAOImplTest
+[INFO] Running org.example.am.shared.dao.scheduling.TimeslotSchedulingDAOTest
+[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.035 s -- in org.example.am.shared.dao.scheduling.TimeslotSchedulingDAOTest
+[INFO] Running org.example.am.shared.schema.SchemaInstallerTest
+22:13:41.563 AMS-TEST INFO  [SchemaInstaller] Ran 35 scripts from classpath*:db/schema/01_tables/*.sql
+22:13:41.564 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/04_sequences/*.sql
+22:13:41.565 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/05_views/*.sql
+22:13:41.576 AMS-TEST INFO  [SchemaInstaller] Ran 2 scripts from classpath*:db/schema/02_constraints/*.sql
+22:13:41.580 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/03_indexes/*.sql
+22:13:41.591 AMS-TEST INFO  [SchemaInstaller] Ran 24 scripts from classpath*:db/seed/core/*.sql
+22:13:41.591 AMS-TEST INFO  [SchemaInstaller] Schema ready: 3 customers, 0 bookable windows (demo data: false, seed applied)
+22:13:41.600 AMS-TEST INFO  [SchemaInstaller] Ran 35 scripts from classpath*:db/schema/01_tables/*.sql
+22:13:41.601 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/04_sequences/*.sql
+22:13:41.601 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/05_views/*.sql
+22:13:41.606 AMS-TEST INFO  [SchemaInstaller] Ran 2 scripts from classpath*:db/schema/02_constraints/*.sql
+22:13:41.607 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/03_indexes/*.sql
+22:13:41.612 AMS-TEST INFO  [SchemaInstaller] Ran 24 scripts from classpath*:db/seed/core/*.sql
+22:13:41.612 AMS-TEST INFO  [SchemaInstaller] Schema ready: 3 customers, 0 bookable windows (demo data: false, seed applied)
+22:13:41.620 AMS-TEST INFO  [SchemaInstaller] Ran 35 scripts from classpath*:db/schema/01_tables/*.sql
+22:13:41.621 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/04_sequences/*.sql
+22:13:41.621 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/05_views/*.sql
+22:13:41.626 AMS-TEST INFO  [SchemaInstaller] Ran 2 scripts from classpath*:db/schema/02_constraints/*.sql
+22:13:41.627 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/03_indexes/*.sql
+22:13:41.631 AMS-TEST INFO  [SchemaInstaller] Ran 24 scripts from classpath*:db/seed/core/*.sql
+22:13:41.632 AMS-TEST INFO  [SchemaInstaller] Schema ready: 3 customers, 0 bookable windows (demo data: false, seed applied)
+22:13:41.641 AMS-TEST INFO  [SchemaInstaller] Ran 35 scripts from classpath*:db/schema/01_tables/*.sql
+22:13:41.642 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/04_sequences/*.sql
+22:13:41.642 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/05_views/*.sql
+22:13:41.647 AMS-TEST INFO  [SchemaInstaller] Ran 2 scripts from classpath*:db/schema/02_constraints/*.sql
+22:13:41.648 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/03_indexes/*.sql
+22:13:41.652 AMS-TEST INFO  [SchemaInstaller] Ran 24 scripts from classpath*:db/seed/core/*.sql
+22:13:41.653 AMS-TEST INFO  [SchemaInstaller] Ran 2 scripts from classpath*:db/seed/demo/*.sql
+22:13:41.687 AMS-TEST INFO  [SchemaInstaller] Ran 2 scripts from classpath*:db/seed/rolling/*.sql
+22:13:41.688 AMS-TEST INFO  [SchemaInstaller] Schema ready: 3 customers, 339 bookable windows (demo data: true, seed applied)
+22:13:41.694 AMS-TEST INFO  [SchemaInstaller] Ran 35 scripts from classpath*:db/schema/01_tables/*.sql
+22:13:41.695 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/04_sequences/*.sql
+22:13:41.695 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/05_views/*.sql
+22:13:41.699 AMS-TEST INFO  [SchemaInstaller] Ran 2 scripts from classpath*:db/schema/02_constraints/*.sql
+22:13:41.700 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/03_indexes/*.sql
+22:13:41.703 AMS-TEST INFO  [SchemaInstaller] Ran 24 scripts from classpath*:db/seed/core/*.sql
+22:13:41.704 AMS-TEST INFO  [SchemaInstaller] Ran 2 scripts from classpath*:db/seed/demo/*.sql
+22:13:41.716 AMS-TEST INFO  [SchemaInstaller] Ran 2 scripts from classpath*:db/seed/rolling/*.sql
+22:13:41.716 AMS-TEST INFO  [SchemaInstaller] Schema ready: 3 customers, 339 bookable windows (demo data: true, seed applied)
+22:13:41.725 AMS-TEST INFO  [SchemaInstaller] Ran 35 scripts from classpath*:db/schema/01_tables/*.sql
+22:13:41.726 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/04_sequences/*.sql
+22:13:41.726 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/05_views/*.sql
+22:13:41.729 AMS-TEST INFO  [SchemaInstaller] Ran 2 scripts from classpath*:db/schema/02_constraints/*.sql
+22:13:41.730 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/03_indexes/*.sql
+22:13:41.733 AMS-TEST INFO  [SchemaInstaller] Ran 24 scripts from classpath*:db/seed/core/*.sql
+22:13:41.733 AMS-TEST INFO  [SchemaInstaller] Schema ready: 3 customers, 0 bookable windows (demo data: false, seed applied)
+22:13:41.737 AMS-TEST INFO  [SchemaInstaller] Ran 35 scripts from classpath*:db/schema/01_tables/*.sql
+22:13:41.737 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/04_sequences/*.sql
+22:13:41.737 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/05_views/*.sql
+22:13:41.738 AMS-TEST INFO  [SchemaInstaller] Ran 2 scripts from classpath*:db/schema/02_constraints/*.sql
+22:13:41.738 AMS-TEST INFO  [SchemaInstaller] Ran 1 scripts from classpath*:db/schema/03_indexes/*.sql
+22:13:41.738 AMS-TEST INFO  [SchemaInstaller] Schema ready: 3 customers, 0 bookable windows (demo data: false, seed already present)
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.193 s -- in org.example.am.shared.schema.SchemaInstallerTest
+[INFO] Running org.example.am.shared.service.impl.ConfigServiceImplTest
+22:13:41.746 AMS-TEST WARN  [ConfigServiceImpl] Property HELPCTRON holds 'not-a-flag', which is not a flag; using default true
+22:13:41.746 AMS-TEST WARN  [ConfigServiceImpl] Property HELPCTRON holds 'not-a-flag', which is not a flag; using default false
+[ERROR] Tests run: 5, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.015 s <<< FAILURE! -- in org.example.am.shared.service.impl.ConfigServiceImplTest
+[ERROR] org.example.am.shared.service.impl.ConfigServiceImplTest.allPropertiesComeBackKeyedByPropertyKey -- Time elapsed: 0.003 s <<< ERROR!
+org.springframework.dao.DataIntegrityViolationException: PreparedStatementCallback; SQL [SELECT P.PROPERTY_KEY, P.PROPERTY_VALUE   FROM AMS_PROPERTIES P  ORDER BY P.PROPERTY_KEY ]; No data is available [2000-176]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:118)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:723)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:748)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.query(NamedParameterJdbcTemplate.java:178)
+	at org.example.am.shared.dao.impl.ConfigDAOImpl.getAllProperties(ConfigDAOImpl.java:53)
+	at org.example.am.shared.service.impl.ConfigServiceImpl.getAllProperties(ConfigServiceImpl.java:71)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:380)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:223)
+	at jdk.proxy2/jdk.proxy2.$Proxy40.getAllProperties(Unknown Source)
+	at org.example.am.shared.service.impl.ConfigServiceImplTest.allPropertiesComeBackKeyedByPropertyKey(ConfigServiceImplTest.java:51)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: org.h2.jdbc.JdbcSQLException: No data is available [2000-176]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:344)
+	at org.h2.message.DbException.get(DbException.java:178)
+	at org.h2.message.DbException.get(DbException.java:154)
+	at org.h2.message.DbException.get(DbException.java:143)
+	at org.h2.jdbc.JdbcResultSet.checkOnValidRow(JdbcResultSet.java:3188)
+	at org.h2.jdbc.JdbcResultSet.get(JdbcResultSet.java:3194)
+	at org.h2.jdbc.JdbcResultSet.get(JdbcResultSet.java:3211)
+	at org.h2.jdbc.JdbcResultSet.getString(JdbcResultSet.java:304)
+	at org.example.am.shared.utils.ConversionUtils.getString(ConversionUtils.java:65)
+	at org.example.am.shared.dao.impl.ConfigDAOImpl.lambda$getAllProperties$0(ConfigDAOImpl.java:55)
+	at org.springframework.jdbc.core.JdbcTemplate$1.doInPreparedStatement(JdbcTemplate.java:733)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 19 more
+
+[INFO] Running org.example.am.shared.service.impl.CalendarServiceImplTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.014 s -- in org.example.am.shared.service.impl.CalendarServiceImplTest
+[INFO] Running org.example.am.shared.service.impl.OrderServiceImplTest
+22:13:41.965 AMS-TEST INFO  [OrderServiceImpl] Installation slot 9705 could not be reserved for order 7777: null
+22:13:41.971 AMS-TEST INFO  [OrderServiceImpl] Installation slot 9705 could not be reserved for order 7777: null
+22:13:41.974 AMS-TEST INFO  [OrderServiceImpl] Installation slot 9705 could not be reserved for order 7777: NO_CAPACITY
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.207 s -- in org.example.am.shared.service.impl.OrderServiceImplTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Errors: 
+[ERROR]   ConfigServiceImplTest.allPropertiesComeBackKeyedByPropertyKey:51 » DataIntegrityViolation PreparedStatementCallback; SQL [SELECT P.PROPERTY_KEY, P.PROPERTY_VALUE   FROM AMS_PROPERTIES P  ORDER BY P.PROPERTY_KEY ]; No data is available [2000-176]
+[INFO] 
+[ERROR] Tests run: 55, Failures: 0, Errors: 1, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for AMS Common 1.0.0-SNAPSHOT:
+[INFO] 
+[INFO] AMS Common ......................................... SUCCESS [  0.054 s]
+[INFO] Asset Management Shared Common ..................... SUCCESS [  1.042 s]
+[INFO] Asset Management Network Validation ................ SUCCESS [  0.434 s]
+[INFO] Asset Management Shared Services ................... FAILURE [  2.298 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.884 s
+[INFO] Finished at: 2026-10-01T22:13:42-04:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project AssetManagementSharedServices: 
+[ERROR] 
+[ERROR] Please refer to /private/tmp/claude-501/-Users-raja-forge-tool/14dcfc75-2ad0-4188-bec2-d495d0693c2f/scratchpad/ams/ams-common/AssetManagementSharedServices/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :AssetManagementSharedServices

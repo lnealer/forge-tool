@@ -4,11 +4,16 @@ langchain==1.2.8
 langchain-aws==1.2.5
 langchain-openai==1.0.3
 langgraph==1.0.7
+# langgraph 1.0.7 has no langgraph.runtime.ExecutionInfo, which
+# langgraph-prebuilt >= 1.0.9 imports. Leaving this unpinned makes pip pick
+# a prebuilt that breaks `from langchain.agents import create_agent`.
+langgraph-prebuilt==1.0.8
 langchain-community==0.4.1
 # langgraph_checkpoint==4.0.0
 # langsmith==0.7.5
 langchain-core==1.2.14
 pydantic
+python-dotenv==1.0.1
 boto3
 openai==1.109.1
 black==23.1.0
