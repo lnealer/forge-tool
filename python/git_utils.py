@@ -13,12 +13,44 @@ from utils import get_logger
 
 logger = get_logger()
 
+_GITHUB_TOKEN = ""
+_SSH_KEY_PATH = ""
+
+def configure_ssh_key_path(ssh_key_path):
+    global _SSH_KEY_PATH
+    _SSH_KEY_PATH = ssh_key_path or ""
+
+def _ssh_key_path():
+    if not _GITHUB_TOKEN:
+        raise RuntimeError("SSH Key path not configured; configure_ssh_key_path() must run at startup." )
+    return _SSH_KEY_PATH
+
+def configure_github_token(token):
+    """Hold the PAT in process memory.
+
+    The tools read it from here instead of the model passing it as an
+    argument, so the token never enters the prompt, the conversation history
+    or the Bedrock request body. That is also what lets the Bedrock guardrail
+    block token patterns without blocking every request.
+    """
+    global _GITHUB_TOKEN
+    _GITHUB_TOKEN = token or ""
+
+
+def _github_token():
+    if not _GITHUB_TOKEN:
+        raise RuntimeError(
+            "GitHub token not configured; configure_github_token() must run at startup."
+        )
+    return _GITHUB_TOKEN
+
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-def clone_repo(url, repo_dir,  ssh_private_key_path):
+def clone_repo(url, repo_dir):
     """Clone the target repo to the local file system."""
+    ssh_private_key_path = _ssh_key_path()
     
     try:
         logger.info(f"Cloning repo {url} to {repo_dir}. ssh_private_key_path={ssh_private_key_path}")
@@ -111,18 +143,18 @@ def git_commit(branch_name, repo_file_path, commit_message):
         return e.stderr
 
 @tool
-def create_pull_request(api_key, github_ssh_url, branch_name, pr_title, pr_description):
+def create_pull_request(github_ssh_url, branch_name, pr_title, pr_description):
         """Create a pull request using the GitHub API."""
         repo_api_url = get_github_api_url(github_ssh_url)
-        git_provider = GitHubProvider(api_key, repo_api_url)
+        git_provider = GitHubProvider(repo_api_url)
         logger.info(f"Creating pull request. repo_api_url={repo_api_url}, branch_name={branch_name}")
         return git_provider.create_pull_request(branch_name, pr_title, pr_description)
 
 @tool
-def update_pull_request(api_key, github_ssh_url, branch_name, pr_description):
+def update_pull_request(github_ssh_url, branch_name, pr_description):
         """Update a pull request using the GitHub API."""
         repo_api_url = get_github_api_url(github_ssh_url)
-        git_provider = GitHubProvider(api_key, repo_api_url)
+        git_provider = GitHubProvider(repo_api_url)
         logger.info(f"Updating pull request. repo_api_url={repo_api_url}, branch_name={branch_name}")
         return git_provider.update_pull_request(branch_name, pr_description)
 
@@ -162,7 +194,8 @@ class GitHubProvider(GitProvider):
     Interacts with the GitHub API to perform git operations.
     """
 
-    def __init__(self, api_key, repo_url):
+    def __init__(self, repo_url):
+        api_key=_github_token(api_key)
         self.url = f"{repo_url}/pulls"
         self.api_key = api_key
         self.headers = {
