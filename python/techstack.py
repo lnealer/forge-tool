@@ -15,16 +15,16 @@ import os
 import re
 import xml.etree.ElementTree as ET
 from collections import Counter
+from utils import get_logger
 
 import yaml
 from langchain_core.tools import tool
 
-import settings
-import workdir
-
 SKIP_DIRS = {".git", "target", "build", "node_modules", ".idea", ".venv", "venv", "out", "dist"}
 MAX_CONTENT_BYTES = 400_000
 KNOWLEDGE_BASE_DIRECTORY="./knowledge-base"
+
+logger = get_logger()
 
 # (groupId regex, artifactId regex, framework name)
 FRAMEWORK_RULES = [
@@ -935,14 +935,11 @@ def detect_tech_stack(repo_dir: str) -> str:
     Trust these versions over what documents say.
 
     Args:
-        repo_dir: The cloned repo, relative to the working directory (e.g. "repo").
+        repo_dir: The absolute path of the cloned repo
     """
-    try:
-        root = workdir.resolve(repo_dir)
-    except ValueError as e:
-        return f"ERROR: {e}"
-    if not os.path.isdir(root):
+    logger.info("Detecting stack...")
+    if not os.path.isdir(repo_dir):
         return f"ERROR: {repo_dir} is not a directory."
-    stack = detect(root)
+    stack = detect(repo_dir)
     stack["summary"] = summarize(stack)
     return json.dumps(stack, indent=1)
