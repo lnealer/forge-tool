@@ -117,6 +117,7 @@ def summarize_upgrade(graph):
             except ClientError as e:
                 traceback.print_exc()
                 error_message = e.response["Error"]["Message"]
+                response_placeholder = st.empty()
                 response_placeholder.error(f"AWS Bedrock Error: {error_message}")
             except Exception as e:
                 traceback.print_exc()

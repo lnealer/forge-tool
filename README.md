@@ -24,4 +24,4 @@ TODO:
 
 
 
-  streamlit run python/chat.py -- --github_url  git@github.com:lnealer/test_spring_upgrade_repo.git --upgrade_details "Spring boot 2.7"
+  streamlit run python/chat.py -- --github_url  git@github.com:lnealer/test_spring_upgrade_repo.git --upgrade_details "Spring boot 2.7, java 17"
