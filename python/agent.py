@@ -160,8 +160,8 @@ class Reviewer(NovaPro):
             if tools == None:
                 file_toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "list_directory"])
                 file_tools = file_toolkit.get_tools()
-                kb_tool = load_kb_tool()
-                tools =[kb_tool] + file_tools
+                #kb_tool = load_kb_tool()
+                tools =[] + file_tools
 
             super().__init__(model_id=model_id,model_aws_region=model_aws_region,working_dir=working_dir,tools=tools)
             self.template = ChatPromptTemplate.from_messages([
@@ -184,8 +184,8 @@ class Writer(Claude):
             if tools == None:
                 file_toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "write_file", "list_directory"])
                 file_tools = file_toolkit.get_tools()
-                kb_tool = load_kb_tool()
-                tools = [kb_tool, get_active_branch_name,run_maven_test, run_maven_compile, create_pull_request, update_pull_request, get_current_timestamp, git_commit] + file_tools
+                #kb_tool = load_kb_tool()
+                tools = [ get_active_branch_name,run_maven_test, run_maven_compile, create_pull_request, update_pull_request, get_current_timestamp, git_commit] + file_tools
             super().__init__(model_id=model_id,model_aws_region=model_aws_region,working_dir=working_dir,tools=tools)
             self.llm_chain = self.prompt | self.llm
 
@@ -195,8 +195,8 @@ class ChatBot(Claude):
             if tools == None:
                 file_toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "list_directory"])
                 file_tools = file_toolkit.get_tools()
-                kb_tool = load_kb_tool()
-                tools = [kb_tool] + file_tools
+                #kb_tool = load_kb_tool()
+                tools = [] + file_tools
             super().__init__(model_id=model_id,model_aws_region=model_aws_region,working_dir=working_dir,tools=tools)
             self.prompt = ChatPromptTemplate.from_messages([
                 ("system", prompt),
