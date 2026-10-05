@@ -14,6 +14,16 @@ from utils import get_logger
 logger = get_logger()
 
 _GITHUB_TOKEN = ""
+_SSH_KEY_PATH = ""
+
+def configure_ssh_key_path(ssh_key_path):
+    global _SSH_KEY_PATH
+    _SSH_KEY_PATH = ssh_key_path or ""
+
+def _ssh_key_path():
+    if not _GITHUB_TOKEN:
+        raise RuntimeError("SSH Key path not configured; configure_ssh_key_path() must run at startup." )
+    return _SSH_KEY_PATH
 
 def configure_github_token(token):
     """Hold the PAT in process memory.
@@ -38,8 +48,9 @@ def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-def clone_repo(url, repo_dir,  ssh_private_key_path):
+def clone_repo(url, repo_dir):
     """Clone the target repo to the local file system."""
+    ssh_private_key_path = _ssh_key_path()
     
     try:
         logger.info(f"Cloning repo {url} to {repo_dir}. ssh_private_key_path={ssh_private_key_path}")

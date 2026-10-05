@@ -33,9 +33,6 @@ When the user or reviewer agent asks for changes, make the relevant changes to t
 <repo_url>
 {repo_url}
 </repo_url>
-<ssh_private_key_path>
-{ssh_private_key_path}
-</ssh_private_key_path>
 <tmpdir>
 {tmpdir}
 </tmpdir>
@@ -52,9 +49,6 @@ Upgrade info:
 <repo_url>
 {repo_url}
 </repo_url>
-<ssh_private_key_path>
-{ssh_private_key_path}
-</ssh_private_key_path>
 <tmpdir>
 {tmpdir}
 </tmpdir>
@@ -73,9 +67,6 @@ The generated code can be found in the tmpdir.
 <repo_url>
 {repo_url}
 </repo_url>
-<ssh_private_key_path>
-{ssh_private_key_path}
-</ssh_private_key_path>
 <tmpdir>
 {tmpdir}
 </tmpdir>
@@ -214,8 +205,8 @@ class ChatBot(Claude):
             self.llm_chain = self.prompt | self.llm
 
 
-def create_prompt(prompt_template, version, repo_api_url, repo_url, ssh_private_key_path, tmpdir):
+def create_prompt(prompt_template, version, repo_api_url, repo_url, tmpdir):
     """Create a prompt for the model to generate a code upgrade."""
     logger.info("Creating prompt for model")
-    prompt = prompt_template.format(version=version, repo_api_url=repo_api_url, repo_url=repo_url, ssh_private_key_path=ssh_private_key_path, tmpdir=tmpdir)
+    prompt = prompt_template.format(version=version, repo_api_url=repo_api_url, repo_url=repo_url, tmpdir=tmpdir)
     return prompt

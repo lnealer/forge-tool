@@ -6,7 +6,7 @@ import argparse
 from utils import get_logger, get_config
 from agent import Reviewer,Writer,ChatBot,WRITER_PROMPT_TEMPLATE,REVIEWER_PROMPT_TEMPLATE,CHATBOT_PROMPT_TEMPLATE,create_prompt
 import streamlit as st
-from git_utils import get_github_api_url,clone_repo,create_new_branch,get_repo_name,configure_github_token
+from git_utils import get_github_api_url,clone_repo,create_new_branch,get_repo_name,configure_github_token,configure_ssh_key_path
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.messages import SystemMessage
 from agent_graph import Graph
@@ -40,9 +40,9 @@ def config_upgrade_code(request):
     write_ssh_key(ssh_private_key, ssh_private_key_path)
 
     # create the prompts
-    writer_prompt = create_prompt(WRITER_PROMPT_TEMPLATE, upgrade_details, repo_api_url, repo_url, ssh_private_key_path, tmpdir)
-    reviewer_prompt = create_prompt(REVIEWER_PROMPT_TEMPLATE, upgrade_details, repo_api_url, repo_url, ssh_private_key_path, tmpdir)
-    chat_prompt = create_prompt(CHATBOT_PROMPT_TEMPLATE, upgrade_details, repo_api_url, repo_url, ssh_private_key_path, tmpdir)
+    writer_prompt = create_prompt(WRITER_PROMPT_TEMPLATE, upgrade_details, repo_api_url, repo_url, tmpdir)
+    reviewer_prompt = create_prompt(REVIEWER_PROMPT_TEMPLATE, upgrade_details, repo_api_url, repo_url, tmpdir)
+    chat_prompt = create_prompt(CHATBOT_PROMPT_TEMPLATE, upgrade_details, repo_api_url, repo_url, tmpdir)
 
     reviewer = Reviewer(working_dir=tmpdir,prompt=reviewer_prompt)
     chatbot = ChatBot(working_dir=tmpdir,prompt=chat_prompt)
@@ -52,11 +52,12 @@ def config_upgrade_code(request):
 
     # configure api key
     configure_github_token(api_key)
+    configure_ssh_key_path(ssh_private_key_path)
 
     # clone repo and make branch
     branch_name = f"forge-tool-{int(time.time())}"
     path = os.path.join(tmpdir, get_repo_name(repo_url))
-    clone_repo(repo_url, path,ssh_private_key_path)
+    clone_repo(repo_url, path)
     create_new_branch(branch_name, path)
 
     return writer, chatbot, reviewer, graph,branch_name,path
