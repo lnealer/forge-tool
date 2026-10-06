@@ -127,8 +127,11 @@ def get_active_branch_name():
         return "Not a git repository (or git not installed)"
 
 @tool
-def git_commit(branch_name, repo_file_path, commit_message):
+def git_commit(repo_file_path, commit_message):
     """Commit changes and and push to the remote branch."""
+    branch_name = get_active_branch_name()
+    if branch_name == 'main':
+        return "On main- Create a branch in order to commit"
     repo_file_path =repo_file_path.replace("\\", "/")
     logger.info(f"Writing commits to remote. file_path={repo_file_path}")
     repo_file_path =repo_file_path.replace("\\", "/")

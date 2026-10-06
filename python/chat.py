@@ -12,6 +12,7 @@ from langgraph.types import Command
 from langgraph.errors import GraphRecursionError
 import ui_events
 import json
+from migration_plan import configure_migration_plan
 
 st.set_page_config(page_title="Forge Chatbot", page_icon="🤖", layout="centered")
 st.title("🤖 Forge Chatbot")
@@ -29,6 +30,7 @@ def loop(chatbot, graph, branch_name, repo_path):
     initialize_session_state(chatbot, repo_path,branch_name)
     render_messages()
     render_migration_plan()
+    configure_migration_plan(st.session_state.migration_plan)
     
     user_input = st.chat_input("Enter input here...", disabled=st.session_state.upgrade_done or st.session_state.coding)
 
@@ -114,7 +116,6 @@ async def invoke_graph(graph):
             response_placeholder.markdown("*Coding...*")
         st.session_state.coding = True
         st.session_state.agent_state["messages"] = st.session_state.messages
-        st.session_state.agent_state["migration_plan"] = st.session_state.migration_plan
         logger.info(st.session_state.agent_state)
         
         # wait for the final output of the stream
@@ -252,11 +253,10 @@ def render_migration_plan():
             plan["status"] = "approved"
             ui_events.approve_packs([i.get("pack", "") for i in items if i.get("in_scope", True)])
             st.session_state.messages.append(SystemMessage(
-                "Plan approved including the optional items: migrate every item in the plan, "
+                "Plan approved. Migrate the in-scope items exactly as proposed (optional items stay out), "
                 "then run the tests and the review.")
             )
-                                                          # "Plan approved. Migrate the in-scope items exactly as proposed (optional items stay out), "
-                # "then run the tests and the review.")
+
             st.session_state.plan_complete=True
 
         # # approve optional

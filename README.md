@@ -22,6 +22,8 @@ TODO:
 
  streamlit run python/chat.py -- --github_url git@github.com:lnealer/ams.git --upgrade_details "Java 21, Spring 6, junit5, keep struts"
 
+ streamlit run python/chat.py -- --github_url git@github.com:lnealer/ams.git --upgrade_details "Java 17, stay on spring 5"
+
 
 
   streamlit run python/chat.py -- --github_url  git@github.com:lnealer/test_spring_upgrade_repo.git --upgrade_details "Spring boot 2.7, java 17"

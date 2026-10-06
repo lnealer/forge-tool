@@ -34,7 +34,7 @@ def run_maven_test(code_dir: str) -> str:
         code_dir: The code directory to execute from.
     """
     logger.info(f"Running: mvn clean test -f {code_dir}")
-    command = f'mvn -U clean test -f {code_dir}'
+    command = f'mvn clean test -q -f {code_dir}'
     try:
         # Capture the output and check the return code
         result = subprocess.run(command, check=True, shell=True, capture_output=True, text=True)
@@ -52,7 +52,7 @@ def run_maven_compile(code_dir: str) -> str:
         code_dir: The code directory to execute from.
     """
     logger.info(f"Running maven compile {code_dir}")
-    command = f'mvn -U clean package -f {code_dir}'
+    command = f'mvn clean package -q -f {code_dir}'
     try:
         # Capture the output and check the return code
         result = subprocess.run(command, check=True, shell=True, capture_output=True, text=True)

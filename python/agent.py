@@ -7,6 +7,7 @@ from langchain_community.agent_toolkits import FileManagementToolkit
 from langchain_core.prompts import ChatPromptTemplate
 from tools import load_kb_tool, run_maven_test, run_maven_compile, get_current_timestamp,propose_migration_plan,list_migration_files
 from techstack import detect_tech_stack
+from migration_plan import migration_plan
 
 from utils import get_logger
 
@@ -84,8 +85,16 @@ class Model:
     """Model class for GenAI."""
 
     def invoke(self, input):
-        response = self.llm_chain.invoke(input) 
-        logger.info(response["messages"][-1])  
+        response =""
+        tries = 0
+        try:
+            response = self.llm_chain.invoke(input) 
+            logger.info(response["messages"][-1])  
+        except Exception as e:
+             if(tries>3): 
+                  raise e
+             tries+=1
+
         return response
     
     def stream(self, conversation):
@@ -142,10 +151,10 @@ class Claude(Model):
             client=bedrock_client,
             region_name = model_aws_region,
             model_id=model_id,
-            max_tokens=10000,
+            max_tokens=20000,
             model_kwargs={
                 "temperature": 0.2,
-                "max_tokens": 10000
+                "max_tokens": 20000
             },
         )
 
@@ -177,7 +186,7 @@ class Reviewer(NovaPro):
                 file_toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "list_directory"])
                 file_tools = file_toolkit.get_tools()
                 #kb_tool = load_kb_tool()
-                tools =[] + file_tools
+                tools =[migration_plan] + file_tools
 
             super().__init__(model_id=model_id,model_aws_region=model_aws_region,working_dir=working_dir,tools=tools)
             self.template = ChatPromptTemplate.from_messages([
@@ -185,7 +194,6 @@ class Reviewer(NovaPro):
                 ("human", "Repo path: {repo_path}"),
                 ("human", "{human_conversation}"),
                 ("system", "Writer notes from past round: {writer_notes}"),
-                ("human", "Migration plan: {migration_plan}")
             ])
             self.llm_chain = self.template | self.llm
 
@@ -196,14 +204,13 @@ class Writer(Claude):
                 ("system", "Writer notes from past round: {writer_notes}"),
                 ("human", "Repo path: {repo_path}, branch name: {branch_name}"),
                 ("human", "Human conversation: {human_conversation}"),
-                ("human", "Migration plan: {migration_plan}")
             ])
             # create tools
             if tools == None:
                 file_toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "write_file", "list_directory"])
                 file_tools = file_toolkit.get_tools()
                 #kb_tool = load_kb_tool()
-                tools = [ get_active_branch_name,run_maven_test, run_maven_compile, create_pull_request, update_pull_request, get_current_timestamp, git_commit] + file_tools
+                tools = [migration_plan, get_active_branch_name,run_maven_test, run_maven_compile, create_pull_request, update_pull_request, get_current_timestamp, git_commit] + file_tools
             super().__init__(model_id=model_id,model_aws_region=model_aws_region,working_dir=working_dir,tools=tools)
             self.llm_chain = self.prompt | self.llm
 
