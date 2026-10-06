@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from utils import get_logger
 from langgraph.types import interrupt
 from langgraph.checkpoint.memory import MemorySaver
-from typing import Annotated, TypedDict
+from typing import Annotated, TypedDict, Any
 from langgraph.graph.message import add_messages
 import streamlit as st
 from langchain_core.messages import AnyMessage
@@ -20,6 +20,7 @@ class AgentState(TypedDict):
     reviewer_notes: Annotated[list, add_messages]
     repo_path: str
     branch_name: str
+    migration_plan: Any
 
     human_approved: bool
     auto_approved: bool
@@ -38,7 +39,8 @@ INITIAL_STATE: AgentState = {
     "reviewer_notes": [],
     "messages": [],
     "human_approved": False,
-    "auto_approved": False
+    "auto_approved": False,
+    "migration_plan": ""
 }
 # class WriterOutput(BaseModel):
 #     code_dir: str = Field(description="Path to directory where new code is written")
@@ -55,8 +57,8 @@ class Graph:
 
     def code_writer_node(self, state: AgentState):
         # Generates or refines code based on instructions
-        logger.info(state)
 
+        logger.info(state)
         reviewer_notes = state["reviewer_notes"]
         if len(state["writer_notes"]) > 0:
             writer_notes = state["writer_notes"][-1]
@@ -64,12 +66,15 @@ class Graph:
         messages = state["messages"] 
         repo_path = state["repo_path"]
         branch_name=state["branch_name"]
+        migration_plan=state["migration_plan"]
+        logger.info(messages[-1])
 
         response = self.writer.invoke({"human_conversation": messages, 
                                        "reviewer_notes": reviewer_notes, 
                                        "writer_notes": writer_notes,
                                        "repo_path": repo_path,
                                        "branch_name": branch_name,
+                                       "migration_plan": migration_plan,
                                        })
         return {"writer_notes": [response["messages"][-1]], 
                 "iterations": state["iterations"] + 1,
@@ -83,10 +88,12 @@ class Graph:
         messages = state["messages"] 
         repo_path = state["repo_path"]
         writer_notes = state["writer_notes"][-1]
+        migration_plan=state["migration_plan"]
 
         response = self.reviewer.invoke({"human_conversation": messages, 
                                          "repo_path": repo_path,
                                          "writer_notes": writer_notes,
+                                         "migration_plan": migration_plan,
                                          })
         
         feedback = response["messages"][-1]
@@ -114,18 +121,20 @@ class Graph:
         })
         
         logger.info("Resuming...")
-        # The return Command updates the state based on human UI input
         if human_response.get("approved", False):
+            logger.info("Human approved!")
             return {"human_approved": True}
         else:
             # Human rejected and provided correction details
+            logger.info(f"Human provided this feedback:  {human_response.get('feedback')}")
             return {
                 "human_approved": False, 
-                "messages": human_response.get('feedback')
+                "messages": [human_response.get('feedback')]
             }
 
     def route_after_human_gate(self,state: AgentState) -> Literal["code_writer", END]: 
         if state["human_approved"]:
+            logger.info("exiting graph")
             return END
         return "code_writer"
 

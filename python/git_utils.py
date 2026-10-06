@@ -195,7 +195,7 @@ class GitHubProvider(GitProvider):
     """
 
     def __init__(self, repo_url):
-        api_key=_github_token(api_key)
+        api_key=_github_token()
         self.url = f"{repo_url}/pulls"
         self.api_key = api_key
         self.headers = {

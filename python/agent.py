@@ -5,7 +5,8 @@ from langchain.agents import create_agent
 from git_utils import clone_repo, create_branch, create_pull_request, git_commit,update_pull_request,get_active_branch_name
 from langchain_community.agent_toolkits import FileManagementToolkit
 from langchain_core.prompts import ChatPromptTemplate
-from tools import load_kb_tool, run_maven_test, run_maven_compile, get_current_timestamp
+from tools import load_kb_tool, run_maven_test, run_maven_compile, get_current_timestamp,propose_migration_plan,list_migration_files
+from techstack import detect_tech_stack
 
 from utils import get_logger
 
@@ -20,6 +21,7 @@ DEFAULT_REVIEWER_MODEL ="amazon.nova-pro-v1:0"
 
 WRITER_PROMPT_TEMPLATE = """
 SYSTEM: You are a code upgrading assistant tool for Spring, Java, Spring Boot, and Struts.
+Follow the provided migration plan.
 The repo is cloned inside the tmpdir. Upgrade the code and push. 
 Modify only the code relevant to the upgrade. Also upgrade test code if required for upgrade.
 Before making code changes, check the knowledge base for relevant guidelines. Only use guidelines relevant to your change.
@@ -41,6 +43,11 @@ When the user or reviewer agent asks for changes, make the relevant changes to t
 CHATBOT_PROMPT_TEMPLATE = """
 You are a code upgrade summary chat bot for Spring, Java, Spring Boot, and Struts.
 You communicate very clearly and in brief, concise statements.
+
+Steps to do are:
+- Discover. Run detect_tech_stack on repo. If repo/TECH_STACK.md or a README exists, read it for context, but documents go stale: trust detect_tech_stack for versions and for what the code actually uses (the BOM can be ahead of the sources, and the app server config can be behind both).
+The result's packs.applicable lists, in dependency order, the guideline packs whose own detect rules matched, with evidence; packs.gated lists packs that need a decision (e.g. container=tomcat). Run list_guideline_packs for titles and tiers. For each applicable pack query code_upgrade_knowledge_base (when available) for its transform guidance. A pack with status detect-only has no transform guidance yet: list it as an item with in_scope=false and note that it needs a manual migration.
+- Plan. Call list_migration_files(repo_dir="repo", pack_ids=<the applicable pack ids, comma-separated>) to size each item from the packs' own file selectors. Then call propose_migration_plan with one item per applicable pack (use the pack id as pack), following the dependency order: its current version or state, the target the pack prescribes, the pack name, the scope taken from the inventory (MUST CHANGE count and modules, e.g. '7 files in AssetManagementInternalWeb'), a risk level and notes. Mark in_scope=true for the items needed to reach the upgrade goal (and anything those require); list the other candidates with in_scope=false so the user can opt in. Some packs match on usage alone (imports or config files) even when detect_tech_stack shows the component already at the pack's target version: plan those as in_scope=false verification items with the note 'already at target; verify only', not as migrations. Components with no applicable pack and nothing to change are not items; mention them in the summary. Then stop: give the user a short, readable version of the plan and wait for approval. Do not change any file before the plan is approved.
 
 Upgrade info:
 <verion>
@@ -80,6 +87,16 @@ class Model:
         response = self.llm_chain.invoke(input) 
         logger.info(response["messages"][-1])  
         return response
+    
+    def stream(self, conversation):
+        """Yield the full message list after every graph step (model call or tool run).
+
+        stream_mode="values" emits the whole state each step, so the caller can
+        diff consecutive lists to see what just happened and render it live.
+        """
+        yield from self.llm_chain.stream(
+            {"human_conversation": conversation}, stream_mode="values"
+        )
 
 class NovaPro(Model):
     def __init__(self, model_id=DEFAULT_REVIEWER_MODEL, model_aws_region=DEFAULT_MODEL_REGION, working_dir="", tools=[]):
@@ -97,13 +114,12 @@ class NovaPro(Model):
             client=bedrock_client,
             region_name = model_aws_region,
             model_id=model_id,
-            max_tokens=7500,
+            max_tokens=5000,
             model_kwargs={
                 "temperature": 0.0,
-                "max_tokens": 7500,
+                "max_tokens": 5000,
             },
         )
-
 
         llm =  self.unstructured_llm.bind_tools(tools)
         self.llm = create_agent(model=llm, tools=tools)
@@ -160,8 +176,8 @@ class Reviewer(NovaPro):
             if tools == None:
                 file_toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "list_directory"])
                 file_tools = file_toolkit.get_tools()
-                kb_tool = load_kb_tool()
-                tools =[kb_tool] + file_tools
+                #kb_tool = load_kb_tool()
+                tools =[] + file_tools
 
             super().__init__(model_id=model_id,model_aws_region=model_aws_region,working_dir=working_dir,tools=tools)
             self.template = ChatPromptTemplate.from_messages([
@@ -169,6 +185,7 @@ class Reviewer(NovaPro):
                 ("human", "Repo path: {repo_path}"),
                 ("human", "{human_conversation}"),
                 ("system", "Writer notes from past round: {writer_notes}"),
+                ("human", "Migration plan: {migration_plan}")
             ])
             self.llm_chain = self.template | self.llm
 
@@ -179,13 +196,14 @@ class Writer(Claude):
                 ("system", "Writer notes from past round: {writer_notes}"),
                 ("human", "Repo path: {repo_path}, branch name: {branch_name}"),
                 ("human", "Human conversation: {human_conversation}"),
+                ("human", "Migration plan: {migration_plan}")
             ])
             # create tools
             if tools == None:
                 file_toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "write_file", "list_directory"])
                 file_tools = file_toolkit.get_tools()
-                kb_tool = load_kb_tool()
-                tools = [kb_tool, get_active_branch_name,run_maven_test, run_maven_compile, create_pull_request, update_pull_request, get_current_timestamp, git_commit] + file_tools
+                #kb_tool = load_kb_tool()
+                tools = [ get_active_branch_name,run_maven_test, run_maven_compile, create_pull_request, update_pull_request, get_current_timestamp, git_commit] + file_tools
             super().__init__(model_id=model_id,model_aws_region=model_aws_region,working_dir=working_dir,tools=tools)
             self.llm_chain = self.prompt | self.llm
 
@@ -195,8 +213,8 @@ class ChatBot(Claude):
             if tools == None:
                 file_toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "list_directory"])
                 file_tools = file_toolkit.get_tools()
-                kb_tool = load_kb_tool()
-                tools = [kb_tool] + file_tools
+                #kb_tool = load_kb_tool()
+                tools = [detect_tech_stack,propose_migration_plan,list_migration_files] + file_tools
             super().__init__(model_id=model_id,model_aws_region=model_aws_region,working_dir=working_dir,tools=tools)
             self.prompt = ChatPromptTemplate.from_messages([
                 ("system", prompt),
