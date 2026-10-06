@@ -252,9 +252,11 @@ def render_migration_plan():
             plan["status"] = "approved"
             ui_events.approve_packs([i.get("pack", "") for i in items if i.get("in_scope", True)])
             st.session_state.messages.append(SystemMessage(
-                "Plan approved. Migrate the in-scope items exactly as proposed (optional items stay out), "
+                "Plan approved including the optional items: migrate every item in the plan, "
                 "then run the tests and the review.")
             )
+                                                          # "Plan approved. Migrate the in-scope items exactly as proposed (optional items stay out), "
+                # "then run the tests and the review.")
             st.session_state.plan_complete=True
 
         # # approve optional
