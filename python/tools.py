@@ -39,11 +39,11 @@ def run_maven_test(code_dir: str) -> str:
         # Capture the output and check the return code
         result = subprocess.run(command, check=True, shell=True, capture_output=True, text=True)
         logger.info(f"Mvn output: {result.stdout}")
-        return result.stdout if result.returncode == 0 else result.stderr
+        return result.stdout[-6000:] if result.returncode == 0 else result.stderr[-6000:] 
     except subprocess.CalledProcessError as e:
         logger.info(f"Command '{command}' failed with return code {e.returncode}")
         logger.info(f"Mvn output: {e.stderr} {e.stdout}")
-        return e.stdout + e.stderr
+        return (e.stdout + e.stderr)[-6000:] 
 
 @tool
 def run_maven_compile(code_dir: str) -> str:

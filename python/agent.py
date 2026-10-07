@@ -11,8 +11,17 @@ from migration_plan import migration_plan
 
 from utils import get_logger
 
+from langchain.agents.middleware.context_editing import ContextEditingMiddleware
+from langchain.agents.middleware.context_editing.ContextEditingMiddleware import ClearToolUsesEdit
+from langchain.agents.middleware import ModelCallLimitMiddleware
+
+# Configure the middleware to prune old tool outputs
 config = Config(connect_timeout=240, read_timeout=240, retries={'total_max_attempts': 5,'max_attempts': 5})
 # config = {"recursion_limit": 10}
+
+middleware = ContextEditingMiddleware(
+    edits=[ClearToolUsesEdit(trigger=100000, keep=3)]
+)
 
 logger = get_logger()
 
@@ -29,6 +38,7 @@ Before making code changes, check the knowledge base for relevant guidelines. On
 To verify, compile then run unit tests for all modules. Check the output and fix any issues. Report issues you can't fix. Include the test results in the PR description.
 Commit changes then create a PR using repo_api_url and report any remaining issues in the PR description.
 When the user or reviewer agent asks for changes, make the relevant changes to the code and then push to the remote for review.
+Use writer_notes to decide what to work on next. In your reply, summarize the previous writer notes and add a description of the changes from this round. Including a list of changed files or modules.
 
 <verion>
 {version}
@@ -63,7 +73,10 @@ Upgrade info:
 """
 
 REVIEWER_PROMPT_TEMPLATE = """
-System: You are a reviewing agent for Spring, Java, and Struts upgrades. Review the previously generated code for bugs, improvements, or correctness. Reply with feedback or approval.  If it is correct and meets all parameters, start your response with 'APPROVED'.
+System: You are a reviewing agent for Spring, Java, and Struts upgrades. 
+Review the previously changed code for bugs, improvements, or correctness. Reference notes for changed files.
+Reply with feedback or approval.  
+If it is correct and meets all parameters, start your response with 'APPROVED'.
 The generated code can be found in the tmpdir.
 
 <verion>
@@ -131,7 +144,14 @@ class NovaPro(Model):
         )
 
         llm =  self.unstructured_llm.bind_tools(tools)
-        self.llm = create_agent(model=llm, tools=tools)
+        self.llm = create_agent(model=llm, tools=tools,middleware=[
+             middleware,
+                ModelCallLimitMiddleware(
+                    run_limit=20,        
+                    thread_limit=40,   
+                    exit_behavior="end_turn", 
+                ),
+             ])
         logger.info("Initialized Nova Pro")
 
 
@@ -159,7 +179,14 @@ class Claude(Model):
         )
 
         llm =  unstructured_llm.bind_tools(tools)
-        self.llm = create_agent(model=llm, tools=tools)
+        self.llm = create_agent(model=llm, tools=tools,middleware=[
+             middleware,
+            ModelCallLimitMiddleware(
+                    run_limit=20,          # Max 5 LLM calls per single request
+                    thread_limit=40,      # Max 10 LLM calls across the whole conversation
+                    exit_behavior="end_turn",  # "end" gracefully stops the agent loop; "error" raises an exception
+            ),
+             ])
         logger.info("Initialized Claude")
 
 

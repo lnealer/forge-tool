@@ -16,8 +16,8 @@ class AgentState(TypedDict):
     iterations: int
     max_iterations: int
     messages: Annotated[list[AnyMessage], add_messages] 
-    writer_notes: Annotated[list, add_messages]
-    reviewer_notes: Annotated[list, add_messages]
+    writer_notes: str
+    reviewer_notes: str
     repo_path: str
     branch_name: str
 
@@ -34,8 +34,8 @@ class AgentState(TypedDict):
 INITIAL_STATE: AgentState = {
     "iterations": 0,
     "max_iterations": 10,
-    "writer_notes": [],
-    "reviewer_notes": [],
+    "writer_notes": "",
+    "reviewer_notes": "",
     "messages": [],
     "human_approved": False,
     "auto_approved": False,
@@ -56,22 +56,28 @@ class Graph:
     def code_writer_node(self, state: AgentState):
         # Generates or refines code based on instructions
 
-        logger.info(state)
-        reviewer_notes=""
-        if len(state["reviewer_notes"]) > 0:
-            reviewer_notes = state["reviewer_notes"][-1]
+        reviewer_notes = state["reviewer_notes"]
+        writer_notes=""
         messages = state["messages"] 
         repo_path = state["repo_path"]
         branch_name=state["branch_name"]
         logger.info(messages[-1])
 
-        response = self.writer.invoke({"human_conversation": messages, 
-                                       "reviewer_notes": reviewer_notes, 
-                                       "writer_notes": "",
-                                       "repo_path": repo_path,
-                                       "branch_name": branch_name,
-                                       })
-        return {"writer_notes": [response["messages"][-1]], 
+        count = 0
+        writer_note=""
+        try:
+            response = self.writer.invoke({"human_conversation": messages, 
+                                        "reviewer_notes": reviewer_notes, 
+                                        "writer_notes": writer_notes,
+                                        "repo_path": repo_path,
+                                        "branch_name": branch_name,
+                                        })
+            writer_note=response["messages"][-1]
+        except Exception as e:
+            count+=1
+            if (count>3):
+                raise e
+        return {"writer_notes": writer_note, 
                 "iterations": state["iterations"] + 1,
                 }
 
@@ -82,16 +88,25 @@ class Graph:
         max_iterations = state["max_iterations"]
         messages = state["messages"] 
         repo_path = state["repo_path"]
-        writer_notes = state["writer_notes"][-1]
+        writer_notes = state["writer_notes"]
 
-        response = self.reviewer.invoke({"human_conversation": messages, 
-                                         "repo_path": repo_path,
-                                         "writer_notes": writer_notes,
-                                         })
+        count = 0
+        feedback = ""
+        feedback_content=""
+        try:
+            response = self.reviewer.invoke({"human_conversation": messages, 
+                                            "repo_path": repo_path,
+                                            "writer_notes": writer_notes,
+                                            })
+            feedback = response["messages"][-1]
+            feedback_content = feedback.content
+        except Exception as e:
+            count+=1
+            if (count>3):
+                raise e
         
-        feedback = response["messages"][-1]
-        auto_approved = "APPROVED" in feedback.content or iterations >= max_iterations 
-        return {"reviewer_notes": [feedback], "auto_approved": auto_approved}
+        auto_approved = "APPROVED" in feedback_content or iterations >= max_iterations 
+        return {"reviewer_notes": feedback, "auto_approved": auto_approved}
 
     def route_after_auto_review(self,state: AgentState) -> Literal["human_review_gate", "code_writer"]:
         if state["auto_approved"]:
