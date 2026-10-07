@@ -11,8 +11,7 @@ from migration_plan import migration_plan
 
 from utils import get_logger
 
-from langchain.agents.middleware.context_editing import ContextEditingMiddleware
-from langchain.agents.middleware.context_editing.ContextEditingMiddleware import ClearToolUsesEdit
+from langchain.agents.middleware.context_editing import ContextEditingMiddleware,ClearToolUsesEdit
 from langchain.agents.middleware import ModelCallLimitMiddleware
 
 # Configure the middleware to prune old tool outputs
@@ -149,7 +148,7 @@ class NovaPro(Model):
                 ModelCallLimitMiddleware(
                     run_limit=20,        
                     thread_limit=40,   
-                    exit_behavior="end_turn", 
+                    exit_behavior="end", 
                 ),
              ])
         logger.info("Initialized Nova Pro")
@@ -184,7 +183,7 @@ class Claude(Model):
             ModelCallLimitMiddleware(
                     run_limit=20,          # Max 5 LLM calls per single request
                     thread_limit=40,      # Max 10 LLM calls across the whole conversation
-                    exit_behavior="end_turn",  # "end" gracefully stops the agent loop; "error" raises an exception
+                    exit_behavior="end",  # "end" gracefully stops the agent loop; "error" raises an exception
             ),
              ])
         logger.info("Initialized Claude")
@@ -237,7 +236,7 @@ class Writer(Claude):
                 file_toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "write_file", "list_directory"])
                 file_tools = file_toolkit.get_tools()
                 #kb_tool = load_kb_tool()
-                tools = [migration_plan, get_active_branch_name,run_maven_test, run_maven_compile, create_pull_request, update_pull_request, get_current_timestamp, git_commit] + file_tools
+                tools = [migration_plan, get_active_branch_name,run_maven_test, create_pull_request, update_pull_request, get_current_timestamp, git_commit] + file_tools
             super().__init__(model_id=model_id,model_aws_region=model_aws_region,working_dir=working_dir,tools=tools)
             self.llm_chain = self.prompt | self.llm
 

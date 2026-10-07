@@ -20,7 +20,7 @@ TODO:
 - Additional guard rails
 - Better, more complex test repo(s) (including struts, etc.)
 
- streamlit run python/chat.py -- --github_url git@github.com:lnealer/ams.git --upgrade_details "Java 21, Spring 6, junit5, keep struts"
+ streamlit run python/chat.py -- --github_url git@github.com:lnealer/ams.git --upgrade_details "junit5"
 
  streamlit run python/chat.py -- --github_url git@github.com:lnealer/ams.git --upgrade_details "Java 17, stay on spring 5"
 
