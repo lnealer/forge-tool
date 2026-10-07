@@ -33,7 +33,7 @@ class AgentState(TypedDict):
     # max_iterations: int
 INITIAL_STATE: AgentState = {
     "iterations": 0,
-    "max_iterations": 10,
+    "max_iterations": 15,
     "writer_notes": "",
     "reviewer_notes": "",
     "messages": [],
@@ -61,7 +61,6 @@ class Graph:
         messages = state["messages"] 
         repo_path = state["repo_path"]
         branch_name=state["branch_name"]
-        logger.info(messages[-1])
 
         count = 0
         writer_note=""

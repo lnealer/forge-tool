@@ -2,7 +2,7 @@ import boto3
 from botocore.client import Config
 from langchain_aws import ChatBedrock
 from langchain.agents import create_agent
-from git_utils import clone_repo, create_branch, create_pull_request, git_commit,update_pull_request,get_active_branch_name
+from git_utils import create_pull_request, git_commit,update_pull_request,get_active_branch_name
 from langchain_community.agent_toolkits import FileManagementToolkit
 from langchain_core.prompts import ChatPromptTemplate
 from tools import load_kb_tool, run_maven_test, run_maven_compile, get_current_timestamp,propose_migration_plan,list_migration_files
@@ -19,7 +19,7 @@ config = Config(connect_timeout=240, read_timeout=240, retries={'total_max_attem
 # config = {"recursion_limit": 10}
 
 middleware = ContextEditingMiddleware(
-    edits=[ClearToolUsesEdit(trigger=100000, keep=3)]
+    edits=[ClearToolUsesEdit(trigger=150000, keep=3)]
 )
 
 logger = get_logger()
@@ -34,10 +34,16 @@ Follow the provided migration plan.
 The repo is cloned inside the tmpdir. Upgrade the code and push. 
 Modify only the code relevant to the upgrade. Also upgrade test code if required for upgrade.
 Before making code changes, check the knowledge base for relevant guidelines. Only use guidelines relevant to your change.
-To verify, compile then run unit tests for all modules. Check the output and fix any issues. Report issues you can't fix. Include the test results in the PR description.
-Commit changes then create a PR using repo_api_url and report any remaining issues in the PR description.
 When the user or reviewer agent asks for changes, make the relevant changes to the code and then push to the remote for review.
 Use writer_notes to decide what to work on next. In your reply, summarize the previous writer notes and add a description of the changes from this round. Including a list of changed files or modules.
+
+Steps:
+-Commit  and create a PR using repo_api_url 
+- Make changes locally
+- To verify, compile then run unit tests for all modules. Check the output and fix any issues. Report issues you can't fix. Include the test results in the PR description.
+- Commit and push the changes
+- Update the PR to report any remaining issues in the PR description.
+
 
 <verion>
 {version}
@@ -73,9 +79,10 @@ Upgrade info:
 
 REVIEWER_PROMPT_TEMPLATE = """
 System: You are a reviewing agent for Spring, Java, and Struts upgrades. 
-Review the previously changed code for bugs, improvements, or correctness. Reference notes for changed files.
-Reply with feedback or approval.  
-If it is correct and meets all parameters, start your response with 'APPROVED'.
+Review the previously changed code for bugs, improvements, or correctness. 
+Reference notes for changed files.
+If any tests are failing or changes are missing, fail the code.
+Reply with feedback or approval.   If it is correct and meets all parameters, start your response with 'APPROVED'.
 The generated code can be found in the tmpdir.
 
 <verion>
@@ -146,8 +153,8 @@ class NovaPro(Model):
         self.llm = create_agent(model=llm, tools=tools,middleware=[
              middleware,
                 ModelCallLimitMiddleware(
-                    run_limit=20,        
-                    thread_limit=40,   
+                    run_limit=80,        
+                    # thread_limit=40,   
                     exit_behavior="end", 
                 ),
              ])
@@ -180,11 +187,11 @@ class Claude(Model):
         llm =  unstructured_llm.bind_tools(tools)
         self.llm = create_agent(model=llm, tools=tools,middleware=[
              middleware,
-            ModelCallLimitMiddleware(
-                    run_limit=20,          # Max 5 LLM calls per single request
-                    thread_limit=40,      # Max 10 LLM calls across the whole conversation
-                    exit_behavior="end",  # "end" gracefully stops the agent loop; "error" raises an exception
-            ),
+            # ModelCallLimitMiddleware(
+            #         run_limit=100,        
+            #         # thread_limit=60,     
+            #         exit_behavior="end", 
+            # ),
              ])
         logger.info("Initialized Claude")
 
@@ -212,7 +219,7 @@ class Reviewer(NovaPro):
                 file_toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "list_directory"])
                 file_tools = file_toolkit.get_tools()
                 #kb_tool = load_kb_tool()
-                tools =[migration_plan] + file_tools
+                tools =[migration_plan,run_maven_test] + file_tools
 
             super().__init__(model_id=model_id,model_aws_region=model_aws_region,working_dir=working_dir,tools=tools)
             self.template = ChatPromptTemplate.from_messages([
@@ -236,7 +243,7 @@ class Writer(Claude):
                 file_toolkit = FileManagementToolkit(root_dir=working_dir, selected_tools=["read_file", "write_file", "list_directory"])
                 file_tools = file_toolkit.get_tools()
                 #kb_tool = load_kb_tool()
-                tools = [migration_plan, get_active_branch_name,run_maven_test, create_pull_request, update_pull_request, get_current_timestamp, git_commit] + file_tools
+                tools = [migration_plan, get_active_branch_name,run_maven_test, create_pull_request, update_pull_request, git_commit] + file_tools
             super().__init__(model_id=model_id,model_aws_region=model_aws_region,working_dir=working_dir,tools=tools)
             self.llm_chain = self.prompt | self.llm
 
